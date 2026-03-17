@@ -5,11 +5,11 @@
 
 **Project Title:** Bharat Cyber Nyay Portal – Cyber Crime Reporting System
 **Subtitle:** A Full-Stack Web Application for Secure Cyber Crime Reporting, Evidence Management, and Case Tracking
-**Developer:** [Developer Name]
-**Course / Program:** [Course Name]
-**University / Institution:** [University Name]
-**Academic Year:** 2025–2026
-**Submission Date:** March 2026
+**Developer:** Arka Dey, Arijeet Kuiry, Keval Singh
+**Course:** Bachelors of Computer Applications
+**University:** Netaji Subhash University
+**Academic Year:** 2023–2026
+**Submission Date:** June 2026
 
 ---
 
