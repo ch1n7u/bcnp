@@ -1,0 +1,20 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Next.js
+.next/
+out/
+
+# Logs
+logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

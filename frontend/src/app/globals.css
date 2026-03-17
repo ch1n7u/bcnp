@@ -1,0 +1,116 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+:root {
+  --bg: #fff7e8;
+  --ink: #0f172a;
+  --ocean: #0a6173;
+  --coral: #ff6b57;
+  --card: rgba(255, 255, 255, 0.72);
+}
+
+body {
+  font-family: 'Manrope', sans-serif;
+  color: var(--ink);
+  background: linear-gradient(160deg, #fffef9 0%, #fff9ef 50%, #fffef9 100%);
+  min-height: 100vh;
+}
+
+.glass {
+  background: var(--card);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+}
+
+.hero-grid {
+  background-image:
+    linear-gradient(rgba(10, 97, 115, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(10, 97, 115, 0.07) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Clean two-button language switch in navbar (default EN). */
+.language-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(10, 97, 115, 0.25);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.85);
+  overflow: hidden;
+}
+
+.language-toggle__label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  padding: 0 8px;
+  border-right: 1px solid rgba(10, 97, 115, 0.15);
+}
+
+.language-toggle__button {
+  border: 0;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #0f172a;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.language-toggle__button:hover {
+  background: rgba(10, 97, 115, 0.1);
+}
+
+.language-toggle__button--active {
+  color: #ffffff;
+  background: #0a6173;
+}
+
+#google_translate_element {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.goog-te-banner-frame.skiptranslate,
+#goog-gt-tt {
+  display: none !important;
+}
+
+/* Hide Google Translate popups/tooltips that appear after language switch. */
+.goog-tooltip,
+.goog-tooltip:hover,
+.goog-text-highlight,
+.goog-te-balloon-frame,
+.goog-te-banner-frame,
+iframe.skiptranslate,
+.VIpgJd-ZVi9od-ORHb-OEVmcd,
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf,
+.VIpgJd-ZVi9od-ORHb {
+  display: none !important;
+}
+
+.goog-text-highlight {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+body {
+  top: 0 !important;
+}
