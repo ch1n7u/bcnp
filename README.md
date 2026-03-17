@@ -1,7 +1,5 @@
 # Cyber Crime Reporting Portal
 
-A complete university-ready full-stack project built with free-tier cloud services.
-
 ## 1) Project Folder Structure
 
 ```text
