@@ -5,8 +5,6 @@
 
 **Project Title:** Bharat Cyber Nyay Portal – Cyber Crime Reporting System
 ---
-*Subtitle:* A Full-Stack Web Application for Secure Cyber Crime Reporting, Evidence Management, and Case Tracking
----
 **Developer:** Arka Dey, Arijeet Kuiry, Keval Singh
 ---
 **Course:** Bachelors of Computer Applications
