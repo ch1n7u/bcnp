@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const { supabaseAdmin } = require("../config/db");
 const { createUser, findByEmail, listUsers } = require("../models/userModel");
+const { logCaseEvent } = require("../services/caseTimelineService");
 
 async function getUsers(req, res, next) {
   try {
@@ -189,9 +190,23 @@ async function assignInvestigatorByAdmin(req, res, next) {
   try {
     const { reportId, investigatorId } = req.body;
 
+    const { data: currentReport, error: currentReportError } = await supabaseAdmin
+      .from("reports")
+      .select("report_id, assigned_investigator_id")
+      .eq("report_id", reportId)
+      .maybeSingle();
+
+    if (currentReportError) {
+      return next(new Error(currentReportError.message));
+    }
+
+    if (!currentReport) {
+      return res.status(404).json({ message: "Report not found" });
+    }
+
     const { data: investigator, error: investigatorError } = await supabaseAdmin
       .from("users")
-      .select("id, role")
+      .select("id, role, name")
       .eq("id", investigatorId)
       .eq("role", "investigator")
       .maybeSingle();
@@ -218,6 +233,19 @@ async function assignInvestigatorByAdmin(req, res, next) {
     if (updateError || !updated) {
       return res.status(404).json({ message: "Report not found" });
     }
+
+    await logCaseEvent({
+      reportId,
+      actionType: "INVESTIGATOR_ASSIGNED",
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      metadata: {
+        previous_investigator_id: currentReport.assigned_investigator_id,
+        new_investigator_id: investigator.id,
+        new_investigator_name: investigator.name
+      },
+      req
+    });
 
     return res.json({ success: true, report: updated });
   } catch (error) {

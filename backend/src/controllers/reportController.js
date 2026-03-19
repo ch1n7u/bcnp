@@ -1,6 +1,7 @@
 const { supabaseAdmin } = require("../config/db");
 const { getAnonymousReporterId } = require("../utils/anonymousReporter");
 const { PAYMENT_APPS, INDIAN_STATES_AND_UTS } = require("../config/reportMetadata");
+const { logCaseEvent } = require("../services/caseTimelineService");
 
 const ANONYMOUS_ALLOWED_CRIME_TYPES = new Set([
   "Fake websites",
@@ -43,6 +44,20 @@ async function createReport(req, res, next) {
       .single();
 
     if (error) return next(new Error(error.message));
+
+    await logCaseEvent({
+      reportId: report.report_id,
+      actionType: "CASE_CREATED",
+      actorId: req.user?.id || null,
+      actorRole: req.user?.role || "anonymous",
+      metadata: {
+        crime_type: report.crime_type,
+        initial_status: report.status,
+        location: report.location
+      },
+      req
+    });
+
     return res.status(201).json(report);
   } catch (error) {
     return next(error);

@@ -37,5 +37,7 @@ router.post(
 );
 
 router.get("/:reportId/notes", requireRole("admin", "investigator"), caseController.getCaseNotes);
+router.get("/:reportId/timeline", requireRole("admin", "investigator"), caseController.getCaseTimeline);
+router.delete("/:reportId", requireAdmin, caseController.deleteCase);
 
 module.exports = router;

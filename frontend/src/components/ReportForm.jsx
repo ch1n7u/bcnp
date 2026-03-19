@@ -57,6 +57,46 @@ const defaultStates = [
   "Outside India"
 ];
 
+const defaultCitiesByState = {
+  "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Tirupati", "Other"],
+  "Arunachal Pradesh": ["Itanagar", "Naharlagun", "Tawang", "Pasighat", "Other"],
+  Assam: ["Guwahati", "Dibrugarh", "Silchar", "Jorhat", "Other"],
+  Bihar: ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur", "Other"],
+  Chhattisgarh: ["Raipur", "Bhilai", "Bilaspur", "Korba", "Other"],
+  Goa: ["Panaji", "Margao", "Vasco da Gama", "Mapusa", "Other"],
+  Gujarat: ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Other"],
+  Haryana: ["Gurugram", "Faridabad", "Panipat", "Hisar", "Other"],
+  "Himachal Pradesh": ["Shimla", "Dharamshala", "Mandi", "Solan", "Other"],
+  Jharkhand: ["Ranchi", "Jamshedpur", "Dhanbad", "Bokaro", "Other"],
+  Karnataka: ["Bengaluru", "Mysuru", "Mangaluru", "Hubballi", "Other"],
+  Kerala: ["Kochi", "Thiruvananthapuram", "Kozhikode", "Thrissur", "Other"],
+  "Madhya Pradesh": ["Bhopal", "Indore", "Gwalior", "Jabalpur", "Other"],
+  Maharashtra: ["Mumbai", "Pune", "Nagpur", "Nashik", "Other"],
+  Manipur: ["Imphal", "Thoubal", "Bishnupur", "Churachandpur", "Other"],
+  Meghalaya: ["Shillong", "Tura", "Jowai", "Nongpoh", "Other"],
+  Mizoram: ["Aizawl", "Lunglei", "Champhai", "Kolasib", "Other"],
+  Nagaland: ["Kohima", "Dimapur", "Mokokchung", "Wokha", "Other"],
+  Odisha: ["Bhubaneswar", "Cuttack", "Rourkela", "Sambalpur", "Other"],
+  Punjab: ["Ludhiana", "Amritsar", "Jalandhar", "Patiala", "Other"],
+  Rajasthan: ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Other"],
+  Sikkim: ["Gangtok", "Namchi", "Gyalshing", "Mangan", "Other"],
+  "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Other"],
+  Telangana: ["Hyderabad", "Warangal", "Nizamabad", "Khammam", "Other"],
+  Tripura: ["Agartala", "Dharmanagar", "Udaipur", "Kailasahar", "Other"],
+  "Uttar Pradesh": ["Lucknow", "Kanpur", "Noida", "Varanasi", "Other"],
+  Uttarakhand: ["Dehradun", "Haridwar", "Haldwani", "Roorkee", "Other"],
+  "West Bengal": ["Kolkata", "Howrah", "Siliguri", "Durgapur", "Other"],
+  "Andaman and Nicobar Islands": ["Port Blair", "Diglipur", "Mayabunder", "Rangat", "Other"],
+  Chandigarh: ["Chandigarh", "Other"],
+  "Dadra and Nagar Haveli and Daman and Diu": ["Daman", "Silvassa", "Diu", "Other"],
+  Delhi: ["New Delhi", "North Delhi", "South Delhi", "Dwarka", "Other"],
+  "Jammu and Kashmir": ["Srinagar", "Jammu", "Anantnag", "Baramulla", "Other"],
+  Ladakh: ["Leh", "Kargil", "Nubra", "Other"],
+  Lakshadweep: ["Kavaratti", "Agatti", "Minicoy", "Other"],
+  Puducherry: ["Puducherry", "Karaikal", "Mahe", "Yanam", "Other"],
+  "Outside India": ["Other"]
+};
+
 const defaultPaymentApps = ["GPay", "PhonePe", "Paytm", "BHIM", "Amazon Pay", "Mobikwik", "Other"];
 
 const anonymousAllowedCrimeTypes = new Set(["Fake websites", "Phishing", "Social media harassment"]);
@@ -221,7 +261,8 @@ export default function ReportForm() {
     incidentTime: "",
     suspectDetails: "",
     financialLossAmount: "",
-    location: ""
+    state: "",
+    city: ""
   });
   const [paymentAppOptions, setPaymentAppOptions] = useState(defaultPaymentApps);
   const [stateOptions, setStateOptions] = useState(defaultStates);
@@ -281,6 +322,7 @@ export default function ReportForm() {
   }, []);
 
   const selectedScamFields = scamFieldConfig[form.crimeType] || [];
+  const cityOptions = form.state ? defaultCitiesByState[form.state] || ["Other"] : [];
 
   useEffect(() => {
     // Keep only fields that belong to the currently selected scam type.
@@ -353,6 +395,11 @@ export default function ReportForm() {
       return;
     }
 
+    if (!form.state || !form.city) {
+      setMessage("Please select both state and city.");
+      return;
+    }
+
     const incidentDate = new Date(`${form.incidentDate}T${form.incidentTime}`);
     if (Number.isNaN(incidentDate.getTime())) {
       setMessage("Please provide a valid incident date and time.");
@@ -395,7 +442,7 @@ export default function ReportForm() {
         email: form.email,
         crimeType: form.crimeType,
         description: form.description,
-        location: form.location,
+        location: `${form.city}, ${form.state}`,
         phoneNumber: cleanedPhoneNumber,
         incidentDateTime: incidentDate.toISOString(),
         suspectDetails: buildSuspectDetails(form.crimeType, scamDetails, form.suspectDetails),
@@ -580,8 +627,8 @@ export default function ReportForm() {
           <span className="text-sm font-semibold text-slate-700">State</span>
           <select
             className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 shadow-sm outline-none transition focus:border-ocean focus:ring-2 focus:ring-ocean/20"
-            value={form.location}
-            onChange={(e) => setForm({ ...form, location: e.target.value })}
+            value={form.state}
+            onChange={(e) => setForm({ ...form, state: e.target.value, city: "" })}
             required
           >
             <option value="" disabled>
@@ -590,6 +637,26 @@ export default function ReportForm() {
             {stateOptions.map((stateName) => (
               <option key={stateName} value={stateName}>
                 {stateName}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="grid gap-2 md:col-span-2">
+          <span className="text-sm font-semibold text-slate-700">City</span>
+          <select
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 shadow-sm outline-none transition focus:border-ocean focus:ring-2 focus:ring-ocean/20 disabled:cursor-not-allowed disabled:bg-slate-100"
+            value={form.city}
+            onChange={(e) => setForm({ ...form, city: e.target.value })}
+            disabled={!form.state}
+            required
+          >
+            <option value="" disabled>
+              {form.state ? "Select city" : "Select state first"}
+            </option>
+            {cityOptions.map((cityName) => (
+              <option key={cityName} value={cityName}>
+                {cityName}
               </option>
             ))}
           </select>

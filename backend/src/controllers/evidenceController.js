@@ -3,6 +3,7 @@ const { supabaseAdmin } = require("../config/db");
 const env = require("../config/env");
 const { sha256Buffer } = require("../utils/hash");
 const { getAnonymousReporterId } = require("../utils/anonymousReporter");
+const { logCaseEvent } = require("../services/caseTimelineService");
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = [
@@ -104,6 +105,21 @@ async function uploadEvidence(req, res, next) {
       .single();
 
     if (error) return next(new Error(error.message));
+
+    await logCaseEvent({
+      reportId,
+      actionType: "EVIDENCE_UPLOADED",
+      actorId: req.user?.id || null,
+      actorRole: req.user?.role || "anonymous",
+      metadata: {
+        evidence_id: evidence.evidence_id,
+        original_name: evidence.original_name,
+        mime_type: evidence.mime_type,
+        file_hash: evidence.file_hash
+      },
+      req
+    });
+
     const signedUrl = await resolveEvidenceUrl(evidence.file_url);
     return res.status(201).json({
       ...evidence,

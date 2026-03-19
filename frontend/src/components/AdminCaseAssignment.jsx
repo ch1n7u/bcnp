@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import api from "../lib/api";
 
 const statuses = ["Submitted", "Under Review", "Investigation", "Resolved", "Closed"];
@@ -13,6 +14,56 @@ const statusBadge = {
   Resolved: "bg-green-100 text-green-700",
   Closed: "bg-slate-100 text-slate-600"
 };
+
+const timelineActionLabel = {
+  CASE_CREATED: "Case created",
+  INVESTIGATOR_ASSIGNED: "Investigator assigned",
+  STATUS_UPDATED: "Status updated",
+  CASE_NOTE_ADDED: "Case note added",
+  EVIDENCE_UPLOADED: "Evidence uploaded",
+  CASE_DELETED: "Case deleted"
+};
+
+function timelineDescription(entry) {
+  const metadata = entry.metadata || {};
+
+  if (entry.action_type === "STATUS_UPDATED") {
+    return `Status changed from ${metadata.previous_status || "Unknown"} to ${metadata.new_status || "Unknown"}.`;
+  }
+
+  if (entry.action_type === "INVESTIGATOR_ASSIGNED") {
+    const investigatorName = metadata.new_investigator_name || metadata.new_investigator_id || "Unknown";
+    return `Assigned to ${investigatorName}.`;
+  }
+
+  if (entry.action_type === "CASE_NOTE_ADDED") {
+    return metadata.note_preview ? `Note: ${metadata.note_preview}` : "A case note was added.";
+  }
+
+  if (entry.action_type === "EVIDENCE_UPLOADED") {
+    const name = metadata.original_name || "evidence file";
+    return `Uploaded ${name}.`;
+  }
+
+  if (entry.action_type === "CASE_CREATED") {
+    return `Case opened as ${metadata.initial_status || "Submitted"}.`;
+  }
+
+  if (entry.action_type === "CASE_DELETED") {
+    return metadata.message || "Case deleted by admin.";
+  }
+
+  return "Action recorded.";
+}
+
+function csvEscape(value) {
+  if (value === null || value === undefined) return "";
+  const raw = String(value);
+  if (/[",\n]/.test(raw)) {
+    return `"${raw.replace(/"/g, '""')}"`;
+  }
+  return raw;
+}
 
 function StatCard({ label, value, accent }) {
   return (
@@ -31,8 +82,19 @@ export default function AdminCaseAssignment() {
   const [selectedInvestigator, setSelectedInvestigator] = useState({});
   const [assigningReportId, setAssigningReportId] = useState(null);
   const [updatingReportId, setUpdatingReportId] = useState(null);
+  const [deletingReportId, setDeletingReportId] = useState(null);
+  const [pendingDeleteReportId, setPendingDeleteReportId] = useState(null);
+  const [timelineReportId, setTimelineReportId] = useState(null);
+  const [timelineEntries, setTimelineEntries] = useState([]);
+  const [timelineLoading, setTimelineLoading] = useState(false);
+  const [timelineError, setTimelineError] = useState("");
+  const [isMounted, setIsMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -43,13 +105,16 @@ export default function AdminCaseAssignment() {
       if (filter.status) params.status = filter.status;
       if (filter.crimeType) params.crimeType = filter.crimeType;
 
-      const [reportsResponse, investigatorsResponse] = await Promise.all([
+      const [reportsResult, investigatorsResult] = await Promise.allSettled([
         api.get("/reports", { params }),
         api.get("/admin/investigators")
       ]);
 
-      const nextReports = reportsResponse.data || [];
-      const nextInvestigators = investigatorsResponse.data?.investigators || [];
+      const nextReports = reportsResult.status === "fulfilled" ? reportsResult.value.data || [] : [];
+      const nextInvestigators =
+        investigatorsResult.status === "fulfilled"
+          ? investigatorsResult.value.data?.investigators || []
+          : [];
 
       setReports(nextReports);
       setInvestigators(nextInvestigators);
@@ -62,6 +127,17 @@ export default function AdminCaseAssignment() {
         }
         return next;
       });
+
+      if (reportsResult.status === "rejected") {
+        const reportErrorMessage =
+          reportsResult.reason?.response?.data?.message || "Unable to load reports.";
+        setError(reportErrorMessage);
+      } else if (investigatorsResult.status === "rejected") {
+        const investigatorErrorMessage =
+          investigatorsResult.reason?.response?.data?.message ||
+          "Reports loaded, but investigators list is unavailable.";
+        setError(investigatorErrorMessage);
+      }
     } catch (err) {
       setError(err?.response?.data?.message || "Unable to load case assignment data.");
       setReports([]);
@@ -74,6 +150,24 @@ export default function AdminCaseAssignment() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    const htmlElement = document.documentElement;
+    const bodyElement = document.body;
+
+    if (pendingDeleteReportId || timelineReportId) {
+      htmlElement.style.overflow = "hidden";
+      bodyElement.style.overflow = "hidden";
+    } else {
+      htmlElement.style.overflow = "";
+      bodyElement.style.overflow = "";
+    }
+
+    return () => {
+      htmlElement.style.overflow = "";
+      bodyElement.style.overflow = "";
+    };
+  }, [pendingDeleteReportId, timelineReportId]);
 
   const updateStatus = async (reportId, status) => {
     try {
@@ -120,12 +214,171 @@ export default function AdminCaseAssignment() {
     }
   };
 
+  const confirmDeleteCase = async () => {
+    if (!pendingDeleteReportId) return;
+
+    try {
+      setDeletingReportId(pendingDeleteReportId);
+      setError("");
+      await api.delete(`/cases/${pendingDeleteReportId}`);
+      await load();
+      setPendingDeleteReportId(null);
+    } catch (err) {
+      setError(err?.response?.data?.message || "Unable to delete case.");
+    } finally {
+      setDeletingReportId(null);
+    }
+  };
+
+  const requestDeleteCase = (reportId) => {
+    setPendingDeleteReportId(reportId);
+  };
+
+  const cancelDeleteCase = () => {
+    if (deletingReportId) return;
+    setPendingDeleteReportId(null);
+  };
+
+  const openTimeline = async (reportId) => {
+    setTimelineReportId(reportId);
+    setTimelineError("");
+    setTimelineEntries([]);
+
+    try {
+      setTimelineLoading(true);
+      const { data } = await api.get(`/cases/${reportId}/timeline`);
+      setTimelineEntries(data || []);
+    } catch (err) {
+      setTimelineError(err?.response?.data?.message || "Unable to load case timeline.");
+    } finally {
+      setTimelineLoading(false);
+    }
+  };
+
+  const closeTimeline = () => {
+    if (timelineLoading) return;
+    setTimelineReportId(null);
+    setTimelineEntries([]);
+    setTimelineError("");
+  };
+
+  const exportTimelineCsv = () => {
+    if (!timelineReportId || timelineEntries.length === 0) return;
+
+    const header = [
+      "Timeline ID",
+      "Case ID",
+      "Action",
+      "Description",
+      "Actor Name",
+      "Actor Role",
+      "IP Address",
+      "Timestamp"
+    ];
+
+    const rows = timelineEntries.map((entry) => [
+      entry.timeline_id,
+      entry.report_id,
+      timelineActionLabel[entry.action_type] || entry.action_type,
+      timelineDescription(entry),
+      entry.actor_name || "System/Anonymous",
+      entry.actor_role || "",
+      entry.ip_address || "",
+      new Date(entry.created_at).toISOString()
+    ]);
+
+    const csvContent = [header, ...rows]
+      .map((row) => row.map((cell) => csvEscape(cell)).join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.setAttribute("download", `case-${timelineReportId}-timeline.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(downloadUrl);
+  };
+
+  const exportTimelinePdf = () => {
+    if (!timelineReportId || timelineEntries.length === 0) return;
+
+    const popup = window.open("", "_blank", "width=1000,height=800");
+    if (!popup) {
+      setTimelineError("Popup blocked. Allow popups to export PDF.");
+      return;
+    }
+
+    const itemsHtml = timelineEntries
+      .map((entry) => {
+        const action = timelineActionLabel[entry.action_type] || entry.action_type;
+        const actor = `${entry.actor_name || "System/Anonymous"}${
+          entry.actor_role ? ` (${entry.actor_role})` : ""
+        }`;
+        const time = new Date(entry.created_at).toLocaleString();
+        const description = timelineDescription(entry)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+
+        return `
+          <article class="item">
+            <div class="row">
+              <strong>${action}</strong>
+              <span>${time}</span>
+            </div>
+            <p>${description}</p>
+            <p class="meta">Actor: ${actor}${entry.ip_address ? ` | IP: ${entry.ip_address}` : ""}</p>
+          </article>
+        `;
+      })
+      .join("");
+
+    popup.document.write(`
+      <!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Case ${timelineReportId} Timeline</title>
+          <style>
+            body { font-family: Arial, sans-serif; color: #0f172a; margin: 24px; }
+            h1 { margin: 0 0 8px; font-size: 22px; }
+            .sub { margin: 0 0 20px; color: #475569; font-size: 13px; }
+            .item { border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px; margin: 0 0 10px; }
+            .row { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px; font-size: 13px; }
+            p { margin: 0 0 8px; font-size: 13px; line-height: 1.4; }
+            .meta { color: #64748b; font-size: 12px; margin: 0; }
+            @media print { body { margin: 12mm; } }
+          </style>
+        </head>
+        <body>
+          <h1>Case Timeline #${timelineReportId}</h1>
+          <p class="sub">Generated ${new Date().toLocaleString()}</p>
+          ${itemsHtml}
+          <script>
+            window.onload = function() {
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    popup.document.close();
+  };
+
   const investigatorNameById = useMemo(() => {
     return investigators.reduce((acc, investigator) => {
       acc[investigator.id] = investigator.name;
       return acc;
     }, {});
   }, [investigators]);
+
+  const timelineReport = useMemo(
+    () => reports.find((report) => report.report_id === timelineReportId) || null,
+    [reports, timelineReportId]
+  );
 
   const totalReports = reports.length;
   const unassignedReports = reports.filter((report) => !report.assigned_investigator_id).length;
@@ -201,6 +454,8 @@ export default function AdminCaseAssignment() {
                   <th className="p-2">Assigned To</th>
                   <th className="p-2">Assign</th>
                   <th className="p-2">Note</th>
+                  <th className="p-2">Timeline</th>
+                  <th className="p-2">Delete</th>
                 </tr>
               </thead>
               <tbody>
@@ -277,6 +532,23 @@ export default function AdminCaseAssignment() {
                         </button>
                       </div>
                     </td>
+                    <td className="p-2">
+                      <button
+                        className="rounded border border-slate-300 px-3 py-1 text-slate-700 transition hover:bg-slate-50"
+                        onClick={() => openTimeline(report.report_id)}
+                      >
+                        View
+                      </button>
+                    </td>
+                    <td className="p-2">
+                      <button
+                        className="rounded bg-red-600 px-3 py-1 text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                        disabled={deletingReportId === report.report_id}
+                        onClick={() => requestDeleteCase(report.report_id)}
+                      >
+                        {deletingReportId === report.report_id ? "Deleting..." : "Delete"}
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -284,6 +556,109 @@ export default function AdminCaseAssignment() {
           </div>
         )}
       </div>
+
+      {isMounted &&
+        pendingDeleteReportId &&
+        createPortal(
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/55 p-4">
+            <div className="w-full max-w-md rounded-2xl border border-red-200 bg-white p-5 shadow-2xl sm:p-6">
+              <h3 className="font-display text-xl font-bold text-slate-900">Delete Case #{pendingDeleteReportId}?</h3>
+              <p className="mt-2 text-sm text-slate-600">
+                This action is permanent. The case report and all linked notes/evidence will be removed and cannot be recovered.
+              </p>
+              <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <button
+                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  onClick={cancelDeleteCase}
+                  disabled={Boolean(deletingReportId)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  onClick={confirmDeleteCase}
+                  disabled={Boolean(deletingReportId)}
+                >
+                  {deletingReportId ? "Deleting..." : "Delete Permanently"}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+      {isMounted &&
+        timelineReportId &&
+        createPortal(
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/55 p-4">
+            <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl sm:p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="font-display text-xl font-bold text-slate-900">
+                    Case Timeline #{timelineReportId}
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Chain-of-custody log for {timelineReport?.crime_type || "selected case"}.
+                  </p>
+                </div>
+                <button
+                  className="rounded-lg border border-slate-300 px-3 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                  onClick={closeTimeline}
+                  disabled={timelineLoading}
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  className="rounded-lg border border-slate-300 px-3 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                  onClick={exportTimelineCsv}
+                  disabled={timelineLoading || timelineEntries.length === 0}
+                >
+                  Export CSV
+                </button>
+                <button
+                  className="rounded-lg border border-slate-300 px-3 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                  onClick={exportTimelinePdf}
+                  disabled={timelineLoading || timelineEntries.length === 0}
+                >
+                  Export PDF
+                </button>
+              </div>
+
+              {timelineLoading ? (
+                <p className="mt-4 text-sm text-slate-600">Loading timeline...</p>
+              ) : timelineError ? (
+                <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{timelineError}</p>
+              ) : timelineEntries.length === 0 ? (
+                <p className="mt-4 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">No timeline activity found for this case.</p>
+              ) : (
+                <div className="mt-4 max-h-[60vh] space-y-3 overflow-y-auto pr-1">
+                  {timelineEntries.map((entry) => (
+                    <article key={entry.timeline_id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="font-semibold text-slate-900">
+                          {timelineActionLabel[entry.action_type] || entry.action_type}
+                        </p>
+                        <time className="text-xs text-slate-500">
+                          {new Date(entry.created_at).toLocaleString()}
+                        </time>
+                      </div>
+                      <p className="mt-1 text-sm text-slate-700">{timelineDescription(entry)}</p>
+                      <p className="mt-2 text-xs text-slate-500">
+                        Actor: {entry.actor_name || "System/Anonymous"}
+                        {entry.actor_role ? ` (${entry.actor_role})` : ""}
+                        {entry.ip_address ? ` | IP: ${entry.ip_address}` : ""}
+                      </p>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>,
+          document.body
+        )}
     </section>
   );
 }

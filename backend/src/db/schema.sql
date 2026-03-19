@@ -1,7 +1,7 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE IF NOT EXISTS users (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id BIGSERIAL PRIMARY KEY,
   name VARCHAR(120) NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   phone VARCHAR(20),
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS reports (
   report_id BIGSERIAL PRIMARY KEY,
-  user_id UUID NOT NULL,
+  user_id BIGINT NOT NULL,
   victim_name VARCHAR(120) NOT NULL,
   email VARCHAR(255) NOT NULL,
   phone_number VARCHAR(20) NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS reports (
   financial_loss_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
   location VARCHAR(120) NOT NULL,
   status VARCHAR(30) NOT NULL DEFAULT 'Submitted' CHECK (status IN ('Submitted', 'Under Review', 'Investigation', 'Resolved', 'Closed')),
-  assigned_investigator_id UUID,
+  assigned_investigator_id BIGINT,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
   CONSTRAINT reports_user_fk FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -43,8 +43,20 @@ CREATE TABLE IF NOT EXISTS evidence (
 CREATE TABLE IF NOT EXISTS case_notes (
   note_id BIGSERIAL PRIMARY KEY,
   report_id BIGINT NOT NULL REFERENCES reports(report_id) ON DELETE CASCADE,
-  investigator_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  investigator_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   note_text TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS case_timeline (
+  timeline_id BIGSERIAL PRIMARY KEY,
+  report_id BIGINT NOT NULL,
+  action_type VARCHAR(60) NOT NULL,
+  actor_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  actor_role VARCHAR(30),
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  ip_address VARCHAR(120),
+  user_agent TEXT,
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
@@ -55,6 +67,8 @@ CREATE INDEX IF NOT EXISTS idx_reports_created_at ON reports(created_at);
 CREATE INDEX IF NOT EXISTS idx_reports_assigned_investigator ON reports(assigned_investigator_id);
 CREATE INDEX IF NOT EXISTS idx_evidence_report_id ON evidence(report_id);
 CREATE INDEX IF NOT EXISTS idx_case_notes_report_id ON case_notes(report_id);
+CREATE INDEX IF NOT EXISTS idx_case_timeline_report_id ON case_timeline(report_id);
+CREATE INDEX IF NOT EXISTS idx_case_timeline_created_at ON case_timeline(created_at);
 
 CREATE OR REPLACE FUNCTION get_crime_distribution()
 RETURNS TABLE (label text, value bigint)
