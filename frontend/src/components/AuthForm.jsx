@@ -23,9 +23,16 @@ export default function AuthForm({ mode = "login" }) {
 
   const submit = async (event) => {
     event.preventDefault();
-    setLoading(true);
     setError("");
     setSuccess("");
+
+    const trimmedPhone = form.phone.trim();
+    if (isRegister && !/^\+?[0-9]{10,15}$/.test(trimmedPhone)) {
+      setError("Phone number is required and must be 10 to 15 digits.");
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const endpoint = isRegister ? "/auth/register" : "/auth/login";
@@ -34,7 +41,7 @@ export default function AuthForm({ mode = "login" }) {
             name: form.name,
             email: form.email,
             password: form.password,
-            ...(form.phone.trim() ? { phone: form.phone.trim() } : {})
+            phone: trimmedPhone
           }
         : {
             email: form.email,
@@ -101,10 +108,13 @@ export default function AuthForm({ mode = "login" }) {
         {isRegister && (
           <input
             type="tel"
-            placeholder="Phone (optional)"
+            placeholder="Phone"
             className="w-full rounded-lg border p-3"
             value={form.phone}
             onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            pattern="^\+?[0-9]{10,15}$"
+            title="Phone must be 10 to 15 digits"
+            required
           />
         )}
         <input

@@ -188,23 +188,6 @@ function getTodayLocalDate() {
   return new Date(now.getTime() - tzOffset).toISOString().slice(0, 10);
 }
 
-function parseTimeTo12Hour(time24) {
-  if (!time24 || !/^\d{2}:\d{2}$/.test(time24)) {
-    return { hour: "", minute: "", period: "" };
-  }
-
-  const [hourString, minute] = time24.split(":");
-  const hour24 = Number(hourString);
-  const period = hour24 >= 12 ? "PM" : "AM";
-  const hour12 = hour24 % 12 || 12;
-
-  return {
-    hour: String(hour12).padStart(2, "0"),
-    minute,
-    period
-  };
-}
-
 function build24HourTime({ hour, minute, period }) {
   if (!hour || !minute || !period) return "";
 
@@ -268,6 +251,7 @@ export default function ReportForm() {
   const [stateOptions, setStateOptions] = useState(defaultStates);
   const [scamDetails, setScamDetails] = useState({});
   const [isPaymentAppMenuOpen, setIsPaymentAppMenuOpen] = useState(false);
+  const [incidentTimeParts, setIncidentTimeParts] = useState({ hour: "", minute: "", period: "" });
   const paymentAppMenuRef = useRef(null);
   const isAnonymous = !isAuthenticated;
   const allowedAnonymousTypesLabel = "Fake Website Scams, Phishing Scams, and Social Media Harassment";
@@ -364,13 +348,14 @@ export default function ReportForm() {
   };
 
   const updateIncidentTime = (nextPart) => {
-    const current = parseTimeTo12Hour(form.incidentTime);
-    const updated = { ...current, ...nextPart };
-
-    setForm((prev) => ({
-      ...prev,
-      incidentTime: build24HourTime(updated)
-    }));
+    setIncidentTimeParts((prev) => {
+      const updated = { ...prev, ...nextPart };
+      setForm((currentForm) => ({
+        ...currentForm,
+        incidentTime: build24HourTime(updated)
+      }));
+      return updated;
+    });
   };
 
   const submit = async (event) => {
@@ -565,7 +550,7 @@ export default function ReportForm() {
           <div className="grid grid-cols-3 gap-2">
             <select
               className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm shadow-sm outline-none transition focus:border-ocean focus:ring-2 focus:ring-ocean/20"
-              value={parseTimeTo12Hour(form.incidentTime).hour}
+              value={incidentTimeParts.hour}
               onChange={(e) => updateIncidentTime({ hour: e.target.value })}
               required
             >
@@ -581,7 +566,7 @@ export default function ReportForm() {
 
             <select
               className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm shadow-sm outline-none transition focus:border-ocean focus:ring-2 focus:ring-ocean/20"
-              value={parseTimeTo12Hour(form.incidentTime).minute}
+              value={incidentTimeParts.minute}
               onChange={(e) => updateIncidentTime({ minute: e.target.value })}
               required
             >
@@ -597,7 +582,7 @@ export default function ReportForm() {
 
             <select
               className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm shadow-sm outline-none transition focus:border-ocean focus:ring-2 focus:ring-ocean/20"
-              value={parseTimeTo12Hour(form.incidentTime).period}
+              value={incidentTimeParts.period}
               onChange={(e) => updateIncidentTime({ period: e.target.value })}
               required
             >
