@@ -7,7 +7,8 @@ const {
   assignInvestigatorAdminSchema,
   createInvestigatorSchema,
   updateInvestigatorSchema,
-  investigatorIdParamSchema
+  investigatorIdParamSchema,
+  userIdParamSchema
 } = require("../validations/adminValidation");
 
 const router = express.Router();
@@ -36,6 +37,11 @@ router.delete(
   "/investigators/:investigatorId",
   validate(investigatorIdParamSchema, "params"),
   adminController.deleteInvestigator
+);
+router.delete(
+  "/users/:userId",
+  validate(userIdParamSchema, "params"),
+  adminController.deleteUser
 );
 
 module.exports = router;

@@ -3,17 +3,19 @@ const cors = require("cors");
 const helmet = require("helmet");
 const hpp = require("hpp");
 const rateLimit = require("express-rate-limit");
+const cookieParser = require("cookie-parser");
 const routes = require("./routes");
 const env = require("./config/env");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
 
 const app = express();
+app.use(cookieParser());
 
 const localDevOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
 function isAllowedOrigin(origin) {
   if (!origin) {
-    return true;
+    return env.nodeEnv !== "production";
   }
 
   if (env.frontendUrls.includes(origin)) {

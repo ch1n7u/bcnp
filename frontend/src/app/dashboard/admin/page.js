@@ -41,6 +41,13 @@ export default function AdminDashboardPage() {
             accent="bg-green-100 text-green-700"
             cta="Team"
           />
+          <ActionCard
+            href="/dashboard/admin/users"
+            title="Registered Users"
+            description="Review all registered citizens on the platform and seamlessly delete invalid, abusive, or duplicate accounts."
+            accent="bg-purple-100 text-purple-700"
+            cta="Users"
+          />
         </div>
       </section>
     </ProtectedRoute>

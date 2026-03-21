@@ -314,9 +314,8 @@ export default function AdminCaseAssignment() {
     const itemsHtml = timelineEntries
       .map((entry) => {
         const action = timelineActionLabel[entry.action_type] || entry.action_type;
-        const actor = `${entry.actor_name || "System/Anonymous"}${
-          entry.actor_role ? ` (${entry.actor_role})` : ""
-        }`;
+        const actor = `${entry.actor_name || "System/Anonymous"}${entry.actor_role ? ` (${entry.actor_role})` : ""
+          }`;
         const time = new Date(entry.created_at).toLocaleString();
         const description = timelineDescription(entry)
           .replace(/&/g, "&amp;")

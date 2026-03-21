@@ -1,15 +1,8 @@
-const TOKEN_KEY = "ccrp_token";
 const USER_KEY = "ccrp_user";
 
-export function setAuth(token, user) {
+export function setAuth(user) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(USER_KEY, JSON.stringify(user));
-}
-
-export function getToken() {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(TOKEN_KEY);
 }
 
 export function getUser() {
@@ -25,8 +18,13 @@ export function getUser() {
   }
 }
 
-export function logout() {
+export async function logout() {
   if (typeof window === "undefined") return;
-  localStorage.removeItem(TOKEN_KEY);
+  try {
+    const api = (await import("./api")).default;
+    await api.post("/auth/logout");
+  } catch (err) {
+    console.error("Logout failed", err);
+  }
   localStorage.removeItem(USER_KEY);
 }

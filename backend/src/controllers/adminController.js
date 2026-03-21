@@ -253,11 +253,37 @@ async function assignInvestigatorByAdmin(req, res, next) {
   }
 }
 
+async function deleteUser(req, res, next) {
+  try {
+    const { userId } = req.params;
+
+    const { data: deleted, error } = await supabaseAdmin
+      .from("users")
+      .delete()
+      .eq("id", userId)
+      .select("id, name, email")
+      .maybeSingle();
+
+    if (error) {
+      return next(new Error(error.message));
+    }
+
+    if (!deleted) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.json({ success: true, user: deleted });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   getUsers,
   getInvestigators,
   assignInvestigatorByAdmin,
   createInvestigator,
   updateInvestigator,
-  deleteInvestigator
+  deleteInvestigator,
+  deleteUser
 };

@@ -54,7 +54,7 @@ async function uploadEvidence(req, res, next) {
 
     const { data: report } = await supabaseAdmin
       .from("reports")
-      .select("report_id, user_id")
+      .select("report_id, user_id, assigned_investigator_id")
       .eq("report_id", reportId)
       .maybeSingle();
 
@@ -67,7 +67,9 @@ async function uploadEvidence(req, res, next) {
     // - Citizen can upload only for own report.
     // - Anonymous upload allowed only for anonymous-reporter owned reports.
     if (req.user?.role === "investigator") {
-      // allowed
+      if (String(report.assigned_investigator_id) !== String(req.user.id)) {
+        return res.status(403).json({ message: "Forbidden: Not assigned to this report" });
+      }
     } else if (req.user?.id) {
       if (String(req.user.id) !== String(report.user_id)) {
         return res.status(403).json({ message: "Forbidden" });
@@ -77,6 +79,32 @@ async function uploadEvidence(req, res, next) {
       if (String(report.user_id) !== String(anonymousUserId)) {
         return res.status(403).json({ message: "Please log in to upload evidence for this report." });
       }
+    }
+
+    const buffer = req.file.buffer;
+    let isValidType = false;
+    
+    if (buffer.length >= 3 && buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF) {
+      if (req.file.mimetype === "image/jpeg") isValidType = true;
+    } else if (buffer.length >= 8 && buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47 && buffer[4] === 0x0D && buffer[5] === 0x0A && buffer[6] === 0x1A && buffer[7] === 0x0A) {
+      if (req.file.mimetype === "image/png") isValidType = true;
+    } else if (buffer.length >= 12 && buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46 && buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50) {
+      if (req.file.mimetype === "image/webp") isValidType = true;
+    } else if (buffer.length >= 5 && buffer[0] === 0x25 && buffer[1] === 0x50 && buffer[2] === 0x44 && buffer[3] === 0x46 && buffer[4] === 0x2D) {
+      if (req.file.mimetype === "application/pdf") isValidType = true;
+    } else if (req.file.mimetype === "text/plain") {
+      const maxCheck = Math.min(buffer.length, 512);
+      let isText = true;
+      for (let i = 0; i < maxCheck; i++) {
+        if (buffer[i] === 0x00) {
+          isText = false; break;
+        }
+      }
+      if (isText) isValidType = true;
+    }
+
+    if (!isValidType) {
+      return res.status(400).json({ message: "Invalid file content for the specified mime type." });
     }
 
     const fileHash = sha256Buffer(req.file.buffer);
@@ -136,14 +164,18 @@ async function getEvidenceByReport(req, res, next) {
 
     const { data: report, error: reportError } = await supabaseAdmin
       .from("reports")
-      .select("report_id, user_id")
+      .select("report_id, user_id, assigned_investigator_id")
       .eq("report_id", reportId)
       .maybeSingle();
 
     if (reportError) return next(new Error(reportError.message));
     if (!report) return res.status(404).json({ message: "Report not found" });
 
-    if (req.user?.role !== "investigator" && String(req.user?.id) !== String(report.user_id)) {
+    if (req.user?.role === "investigator") {
+      if (String(req.user.id) !== String(report.assigned_investigator_id)) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+    } else if (String(req.user?.id) !== String(report.user_id)) {
       return res.status(403).json({ message: "Forbidden" });
     }
 

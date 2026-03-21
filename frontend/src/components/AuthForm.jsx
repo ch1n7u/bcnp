@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import api from "../lib/api";
@@ -8,7 +8,7 @@ import { useAuth } from "../context/AuthContext";
 
 export default function AuthForm({ mode = "login" }) {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -18,6 +18,18 @@ export default function AuthForm({ mode = "login" }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const dest =
+        user.role === "admin"
+          ? "/dashboard/admin"
+          : user.role === "investigator"
+            ? "/dashboard"
+            : "/profile";
+      router.replace(dest);
+    }
+  }, [isAuthenticated, user, router]);
 
   const isRegister = mode === "register";
 
@@ -50,19 +62,27 @@ export default function AuthForm({ mode = "login" }) {
 
       const { data } = await api.post(endpoint, payload);
 
-      if (!data?.token || !data?.user) {
+      if (isRegister) {
+        setSuccess("Account created successfully! Redirecting to login...");
+        setTimeout(() => {
+          router.push("/login");
+        }, 1500);
+        return;
+      }
+
+      if (!data?.user) {
         throw new Error("Invalid authentication response from server");
       }
 
-      login({ token: data.token, user: data.user });
-      setSuccess(isRegister ? "Account created! Redirecting..." : "Login successful. Redirecting...");
+      login({ user: data.user });
+      setSuccess("Login successful. Redirecting...");
 
       const destination =
         data.user?.role === "admin"
           ? "/dashboard/admin"
           : data.user?.role === "investigator"
-            ? "/track"
-            : "/report";
+            ? "/dashboard"
+            : "/profile";
       router.replace(destination);
 
       // Fallback in case Next navigation does not trigger in some browser states.
@@ -70,7 +90,7 @@ export default function AuthForm({ mode = "login" }) {
         if (typeof window !== "undefined" && window.location.pathname !== destination) {
           window.location.href = destination;
         }
-      }, 300);
+      }, 500);
     } catch (err) {
       const data = err?.response?.data;
       if (data?.errors?.length) {

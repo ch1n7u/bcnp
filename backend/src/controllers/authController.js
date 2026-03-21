@@ -23,17 +23,15 @@ async function register(req, res, next) {
       role: "citizen"
     });
 
-    const token = signAccessToken(user);
     return res.status(201).json({
       success: true,
-      message: "User registered successfully",
+      message: "User registered successfully. Please login to continue.",
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
         role: user.role
-      },
-      token
+      }
     });
   } catch (error) {
     return next(error);
@@ -57,6 +55,13 @@ async function login(req, res, next) {
     }
 
     const token = signAccessToken(user);
+
+    res.cookie("ccrp_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
 
     return res.json({
       user: {
@@ -138,8 +143,18 @@ async function me(req, res, next) {
   }
 }
 
+async function logout(req, res, next) {
+  res.clearCookie("ccrp_token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax"
+  });
+  return res.json({ message: "Logged out successfully" });
+}
+
 module.exports = {
   register,
   login,
-  me
+  me,
+  logout
 };

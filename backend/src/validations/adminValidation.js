@@ -25,9 +25,14 @@ const investigatorIdParamSchema = z.object({
   investigatorId: z.union([z.string().uuid(), z.string().regex(/^\d+$/)])
 });
 
+const userIdParamSchema = z.object({
+  userId: z.union([z.string().uuid(), z.string().regex(/^\d+$/)])
+});
+
 module.exports = {
   assignInvestigatorAdminSchema,
   createInvestigatorSchema,
   updateInvestigatorSchema,
-  investigatorIdParamSchema
+  investigatorIdParamSchema,
+  userIdParamSchema
 };

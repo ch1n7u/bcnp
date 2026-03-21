@@ -97,7 +97,12 @@ async function getReports(req, res, next) {
 
     if (crimeType) query = query.eq("crime_type", crimeType);
     if (status) query = query.eq("status", status);
-    if (investigatorId) query = query.eq("assigned_investigator_id", investigatorId);
+    
+    if (req.user.role === "investigator") {
+      query = query.eq("assigned_investigator_id", req.user.id);
+    } else if (investigatorId) {
+      query = query.eq("assigned_investigator_id", investigatorId);
+    }
 
     const { data: reports, error } = await query;
     if (error) return next(new Error(error.message));
@@ -129,6 +134,10 @@ async function getReportById(req, res, next) {
     }
 
     if (req.user.role === "citizen" && String(report.user_id) !== String(req.user.id)) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    if (req.user.role === "investigator" && String(report.assigned_investigator_id) !== String(req.user.id)) {
       return res.status(403).json({ message: "Forbidden" });
     }
 
