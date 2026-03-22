@@ -7,9 +7,8 @@ echo "============================================="
 echo "Starting Deployment..."
 echo "============================================="
 
-# Pull new changes
-echo "Pulling latest code from GitHub..."
-git pull origin main
+# Files are now transferred directly by GitHub Actions via SCP
+echo "Local files updated, beginning installation and restart steps..."
 
 # ================= BACKEND =================
 echo "Setting up Backend..."
