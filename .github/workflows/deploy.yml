@@ -17,8 +17,8 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Navigate to the project directory - adjust if your folder name is different
-            cd Cyber-Crime-Reporting || cd ~/Cyber-Crime-Reporting
+            # Navigate to the project directory
+            cd /var/www/bcnp/
             
             # Make the deployment script executable (just in case)
             chmod +x deploy.sh

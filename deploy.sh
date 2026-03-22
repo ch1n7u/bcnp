@@ -19,9 +19,9 @@ echo "Installing backend dependencies..."
 npm install
 
 echo "Restarting backend process..."
-# If PM2 is already managing a process named "backend", it restarts it.
-# Otherwise, it starts the process and names it "backend".
-pm2 restart backend || pm2 start src/server.js --name "backend"
+# If PM2 is already managing a process named "ccr-backend", it restarts it.
+# Otherwise, it starts the process and names it "ccr-backend".
+sudo pm2 restart ccr-backend || sudo pm2 start src/server.js --name "ccr-backend"
 
 # Go back to root
 cd ..
@@ -37,9 +37,9 @@ echo "Building frontend..."
 npm run build
 
 echo "Restarting frontend process..."
-# If PM2 is already managing a process named "frontend", it restarts it.
-# Otherwise, it starts the Next.js process and names it "frontend".
-pm2 restart frontend || pm2 start npm --name "frontend" -- start
+# If PM2 is already managing a process named "ccr-frontend", it restarts it.
+# Otherwise, it starts the Next.js process and names it "ccr-frontend".
+sudo pm2 restart ccr-frontend || sudo pm2 start npm --name "ccr-frontend" -- start
 
 echo "============================================="
 echo "Deployment completed successfully!"
