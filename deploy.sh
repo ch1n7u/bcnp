@@ -15,7 +15,7 @@ echo "Setting up Backend..."
 cd backend
 
 echo "Installing backend dependencies..."
-npm install
+sudo npm install
 
 echo "Restarting backend process..."
 # If PM2 is already managing a process named "ccr-backend", it restarts it.
@@ -30,10 +30,10 @@ echo "Setting up Frontend..."
 cd frontend
 
 echo "Installing frontend dependencies..."
-npm install
+sudo npm install
 
 echo "Building frontend..."
-npm run build
+sudo npm run build
 
 echo "Restarting frontend process..."
 # If PM2 is already managing a process named "ccr-frontend", it restarts it.
