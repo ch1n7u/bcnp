@@ -194,6 +194,54 @@ export default function InvestigatorDashboard() {
                 </div>
               </div>
 
+              {/* Specific Case Details & Evidence */}
+              <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+                  <div>
+                    <h4 className="font-semibold text-slate-700">Contact Details</h4>
+                    <p className="text-slate-600">Email: {c.email || "N/A"}</p>
+                    <p className="text-slate-600">Phone: {c.phone_number || "N/A"}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-slate-700">Incident Details</h4>
+                    <p className="text-slate-600">Date/Time: {c.incident_datetime ? new Date(c.incident_datetime).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "N/A"}</p>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <h4 className="font-semibold text-slate-700">Description</h4>
+                    <p className="mt-1 whitespace-pre-wrap text-slate-600 rounded-lg bg-white p-3 shadow-sm border border-slate-100">{c.description || "No description provided."}</p>
+                  </div>
+                </div>
+
+                {c.suspect_details && (
+                  <div className="mt-4 border-t border-slate-200 pt-4">
+                    <h4 className="font-semibold text-slate-700">Scam & Suspect Details</h4>
+                    <p className="mt-1 whitespace-pre-wrap rounded-lg bg-white p-3 text-sm text-slate-600 shadow-sm border border-slate-100">
+                      {c.suspect_details}
+                    </p>
+                  </div>
+                )}
+
+                {c.evidence && c.evidence.length > 0 && (
+                  <div className="mt-4 border-t border-slate-200 pt-4">
+                    <h4 className="font-semibold text-slate-700 mb-2">Attached Evidence</h4>
+                    <div className="flex flex-wrap gap-3">
+                      {c.evidence.map((ev) => (
+                        <a
+                          key={ev.evidence_id}
+                          href={ev.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-ocean transition hover:border-ocean hover:bg-ocean/5 shadow-sm"
+                          title={ev.mime_type}
+                        >
+                          📎 {ev.original_name || "Attachment"}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Note input */}
               <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                 <input

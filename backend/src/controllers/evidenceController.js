@@ -26,22 +26,9 @@ const upload = multer({
   }
 });
 
-async function resolveEvidenceUrl(fileUrl) {
-  if (!fileUrl) return null;
-
-  if (fileUrl.startsWith("http://") || fileUrl.startsWith("https://") || fileUrl.startsWith("local://")) {
-    return fileUrl;
-  }
-
-  const { data, error } = await supabaseAdmin.storage
-    .from(env.supabaseStorageBucket)
-    .createSignedUrl(fileUrl, 10 * 60);
-
-  if (error || !data?.signedUrl) {
-    return null;
-  }
-
-  return data.signedUrl;
+function generateProxyUrl(req, evidenceId) {
+  // A relative proxy URL to stream the file
+  return `${req.protocol}://${req.get("host")}/api/evidence/file/${evidenceId}`;
 }
 
 async function uploadEvidence(req, res, next) {
@@ -111,12 +98,23 @@ async function uploadEvidence(req, res, next) {
     const sanitizedName = req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_");
     const storagePath = `${reportId}/${Date.now()}-${sanitizedName}`;
 
-    const { error: storageError } = await supabaseAdmin.storage
+    let { error: storageError } = await supabaseAdmin.storage
       .from(env.supabaseStorageBucket)
       .upload(storagePath, req.file.buffer, {
         contentType: req.file.mimetype,
         upsert: false
       });
+
+    if (storageError && storageError.message.toLowerCase().includes("bucket not found")) {
+      await supabaseAdmin.storage.createBucket(env.supabaseStorageBucket, { public: false });
+      const retryResult = await supabaseAdmin.storage
+        .from(env.supabaseStorageBucket)
+        .upload(storagePath, req.file.buffer, {
+          contentType: req.file.mimetype,
+          upsert: false
+        });
+      storageError = retryResult.error;
+    }
 
     if (storageError) return next(new Error(storageError.message));
 
@@ -148,10 +146,10 @@ async function uploadEvidence(req, res, next) {
       req
     });
 
-    const signedUrl = await resolveEvidenceUrl(evidence.file_url);
+    // We store the generic relative proxy URL inside the upload response too
     return res.status(201).json({
       ...evidence,
-      file_url: signedUrl
+      file_url: generateProxyUrl(req, evidence.evidence_id)
     });
   } catch (error) {
     return next(error);
@@ -187,14 +185,64 @@ async function getEvidenceByReport(req, res, next) {
 
     if (error) return next(new Error(error.message));
 
-    const enrichedEvidence = await Promise.all(
-      (evidenceList || []).map(async (evidence) => ({
-        ...evidence,
-        file_url: await resolveEvidenceUrl(evidence.file_url)
-      }))
-    );
+    const enrichedEvidence = (evidenceList || []).map((evidence) => ({
+      ...evidence,
+      file_url: generateProxyUrl(req, evidence.evidence_id)
+    }));
 
     return res.json(enrichedEvidence);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function downloadEvidence(req, res, next) {
+  try {
+    const evidenceId = Number(req.params.evidenceId);
+
+    const { data: evidence, error: evError } = await supabaseAdmin
+      .from("evidence")
+      .select("evidence_id, report_id, file_url, mime_type, original_name")
+      .eq("evidence_id", evidenceId)
+      .maybeSingle();
+
+    if (evError || !evidence) {
+      return res.status(404).json({ message: "Evidence not found" });
+    }
+
+    const { data: report, error: reportError } = await supabaseAdmin
+      .from("reports")
+      .select("report_id, user_id, assigned_investigator_id")
+      .eq("report_id", evidence.report_id)
+      .maybeSingle();
+
+    if (reportError || !report) {
+      return res.status(404).json({ message: "Report not found" });
+    }
+
+    if (req.user?.role === "admin") {
+      // Admins are unconditionally allowed to download any evidence.
+    } else if (req.user?.role === "investigator") {
+      if (String(report.assigned_investigator_id) !== String(req.user.id)) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+    } else if (req.user?.id) {
+      if (String(report.user_id) !== String(req.user.id)) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+    }
+
+    const { data: fileData, error: downloadError } = await supabaseAdmin.storage
+      .from(env.supabaseStorageBucket)
+      .download(evidence.file_url);
+
+    if (downloadError) return next(new Error(downloadError.message));
+
+    const buffer = Buffer.from(await fileData.arrayBuffer());
+
+    res.setHeader("Content-Type", evidence.mime_type);
+    res.setHeader("Content-Disposition", `inline; filename="${evidence.original_name}"`);
+    return res.end(buffer);
   } catch (error) {
     return next(error);
   }
@@ -203,5 +251,6 @@ async function getEvidenceByReport(req, res, next) {
 module.exports = {
   upload,
   uploadEvidence,
-  getEvidenceByReport
+  getEvidenceByReport,
+  downloadEvidence
 };

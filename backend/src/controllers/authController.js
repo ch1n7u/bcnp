@@ -7,6 +7,11 @@ async function register(req, res, next) {
   try {
     const { name, email, password, phone } = req.body;
 
+    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+    if (!strongPasswordRegex.test(password)) {
+      return res.status(400).json({ message: "Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character." });
+    }
+
     const existing = await findByEmail(email);
 
     if (existing) {

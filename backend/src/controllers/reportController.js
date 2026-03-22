@@ -86,13 +86,17 @@ async function getMyReports(req, res, next) {
   }
 }
 
+function generateProxyUrl(req, evidenceId) {
+  return `${req.protocol}://${req.get("host")}/api/evidence/file/${evidenceId}`;
+}
+
 async function getReports(req, res, next) {
   try {
     const { crimeType, status, investigatorId } = req.query;
 
     let query = supabaseAdmin
       .from("reports")
-      .select("*, citizen:users!reports_user_fk(name), investigator:users!reports_investigator_fk(name)")
+      .select("*, citizen:users!reports_user_fk(name), investigator:users!reports_investigator_fk(name), evidence(evidence_id, file_url, original_name, mime_type)")
       .order("created_at", { ascending: false });
 
     if (crimeType) query = query.eq("crime_type", crimeType);
@@ -107,11 +111,18 @@ async function getReports(req, res, next) {
     const { data: reports, error } = await query;
     if (error) return next(new Error(error.message));
 
-    const result = (reports || []).map((r) => ({
-      ...r,
-      citizen_name: r.citizen?.name,
-      investigator_name: r.investigator?.name
-    }));
+    const result = (reports || []).map((r) => {
+      const enrichedEvidence = (r.evidence || []).map((ev) => ({
+        ...ev,
+        file_url: generateProxyUrl(req, ev.evidence_id)
+      }));
+      return {
+        ...r,
+        citizen_name: r.citizen?.name,
+        investigator_name: r.investigator?.name,
+        evidence: enrichedEvidence
+      };
+    });
 
     return res.json(result);
   } catch (error) {

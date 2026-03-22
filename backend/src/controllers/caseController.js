@@ -1,16 +1,29 @@
 const { supabaseAdmin } = require("../config/db");
 const { logCaseEvent, getCaseTimelineEntries } = require("../services/caseTimelineService");
 
+function generateProxyUrl(req, evidenceId) {
+  return `${req.protocol}://${req.get("host")}/api/evidence/file/${evidenceId}`;
+}
+
 async function getAssignedCases(req, res, next) {
   try {
     const { data, error } = await supabaseAdmin
       .from("reports")
-      .select("report_id, victim_name, crime_type, status, location, financial_loss_amount, created_at, updated_at")
+      .select("report_id, victim_name, email, phone_number, incident_datetime, crime_type, description, suspect_details, status, location, financial_loss_amount, created_at, updated_at, evidence(evidence_id, file_url, original_name, mime_type)")
       .eq("assigned_investigator_id", req.user.id)
       .order("updated_at", { ascending: false });
 
     if (error) return next(new Error(error.message));
-    return res.json(data || []);
+
+    const enrichedData = (data || []).map((caseItem) => {
+      const enrichedEvidence = (caseItem.evidence || []).map((ev) => ({
+        ...ev,
+        file_url: generateProxyUrl(req, ev.evidence_id)
+      }));
+      return { ...caseItem, evidence: enrichedEvidence };
+    });
+
+    return res.json(enrichedData);
   } catch (error) {
     return next(error);
   }
@@ -207,6 +220,16 @@ async function getCaseNotes(req, res, next) {
         .select("report_id")
         .eq("report_id", reportId)
         .eq("assigned_investigator_id", req.user.id)
+        .maybeSingle();
+
+      if (reportError) return next(new Error(reportError.message));
+      if (!report) return res.status(403).json({ message: "Forbidden" });
+    } else if (req.user.role === "citizen") {
+      const { data: report, error: reportError } = await supabaseAdmin
+        .from("reports")
+        .select("report_id")
+        .eq("report_id", reportId)
+        .eq("user_id", req.user.id)
         .maybeSingle();
 
       if (reportError) return next(new Error(reportError.message));

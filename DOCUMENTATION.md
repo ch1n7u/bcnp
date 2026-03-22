@@ -15,28 +15,26 @@
 
 ---
 
-# TABLE OF CONTENTS
-
-| Section | Title | Page |
-|---------|-------|------|
-| 1 | Abstract | 3 |
-| 2 | Introduction | 4 |
-| 3 | Problem Statement | 6 |
-| 4 | Proposed Solution | 7 |
-| 5 | System Architecture | 8 |
-| 6 | Technology Stack | 11 |
-| 7 | Features of the System | 14 |
-| 8 | Cyber Crime Modules | 17 |
-| 9 | Security Implementation | 18 |
-| 10 | Database Design | 21 |
-| 11 | User Interface Design | 23 |
-| 12 | Workflow Explanation | 25 |
-| 13 | Testing | 27 |
-| 14 | Deployment | 29 |
-| 15 | Limitations | 31 |
-| 16 | Future Enhancements | 32 |
-| 17 | Conclusion | 33 |
-| 18 | References | 34 |
+| Section | Title |
+|---------|-------|
+| 1 | [Abstract](#section-1--abstract) |
+| 2 | [Introduction](#section-2--introduction) |
+| 3 | [Problem Statement](#section-3--problem-statement) |
+| 4 | [Proposed Solution](#section-4--proposed-solution) |
+| 5 | [System Architecture](#section-5--system-architecture) |
+| 6 | [Technology Stack](#section-6--technology-stack) |
+| 7 | [Features of the System](#section-7--features-of-the-system) |
+| 8 | [Cyber Crime Modules](#section-8--cyber-crime-modules) |
+| 9 | [Security Implementation](#section-9--security-implementation) |
+| 10 | [Database Design](#section-10--database-design) |
+| 11 | [User Interface Design](#section-11--user-interface-design) |
+| 12 | [Workflow Explanation](#section-12--workflow-explanation) |
+| 13 | [Testing](#section-13--testing) |
+| 14 | [Deployment](#section-14--deployment) |
+| 15 | [Limitations](#section-15--limitations) |
+| 16 | [Future Enhancements](#section-16--future-enhancements) |
+| 17 | [Conclusion](#section-17--conclusion) |
+| 18 | [References](#section-18--references) |
 
 ---
 
@@ -578,9 +576,9 @@ The source code is version-controlled on GitHub. Both Vercel and Render are conn
 
 ## 7.1 Citizen Features
 
-### 7.1.1 User Registration and Login
+### 7.1.1 User Registration, Validation & Success Flow
 
-Citizens can create a secure account by providing their name, email address, phone number, and password. The registration form validates all inputs through Zod schema checks on the backend. Passwords are hashed with bcrypt (cost factor 12) before storage. Upon successful login, the server returns a signed JWT valid for **one day**, which the frontend stores and uses for all subsequent authenticated requests.
+Citizens can create a secure account by providing their name, email address, phone number, and password. The system enforces **strict password complexity** natively on the form through a real-time reactive checklist (requiring minimum 8 characters, uppercase, lowercase, numbers, and symbols) combined with a confirming dual-password match system. Passwords are simultaneously validated through Zod backend schemas and hashed via bcrypt (cost factor 12). Upon successful account creation, instead of abrupt redirects, the system presents an immersive, full-screen Success Modal overlay confirming registration and directing the user back to securely log in. Sessions return a signed JWT valid for **one day**.
 
 ### 7.1.2 Report a Cyber Crime
 
@@ -631,14 +629,10 @@ When a report is submitted without an authenticated session for these categories
 
 ## 7.2 Administrator Features
 
-### 7.2.1 All Reports View
+### 7.2.1 Comprehensive Case Overview (Admin Homepage)
 
-Administrators have access to a filterable, searchable table of all reports in the system. Reports can be filtered by:
-- Crime type
-- Case status
-- Assigned investigator
-
-The table displays key report metadata including victim name, crime type, location, submission date, current status, and the assigned investigator.
+Administrators have access to a visually rich, comprehensive **All Cases Overview Panel** directly on their primary dashboard. This panel automatically fetches and displays every case across the platform. Cases are structurally rendered as sleek expandable accordion rows. When clicked, an accordion reveals an analytical grid of deep case particulars: Victim background, financial impact, incident timeline, subjective descriptions, and suspect details. 
+Crucially, **attached evidence is rendered directly within the dashboard** via secure authenticated Blob proxy links (`SecureImage` components). Additionally, Administrators can instantaneously re-assign investigators and manually update case statuses directly within the case accordion using inline dropdown controllers.
 
 ### 7.2.2 Case Assignment
 
@@ -755,9 +749,9 @@ The evidence handling pipeline was designed to maintain file integrity and chain
 4. **Multer Processing**: The backend Multer middleware intercepts the multipart request, storing the file in memory (no disk write).
 5. **File Hash**: A SHA-256 hash of the file buffer is computed using Node.js's `crypto` module via `sha256Buffer()`.
 6. **Supabase Storage Upload**: The file buffer is uploaded to the Supabase Storage bucket (`evidence-files`) under a path of `{reportId}/{timestamp}-{sanitisedName}`.
-7. **Public URL Retrieval**: A public download URL is generated from Supabase Storage for the uploaded file.
-8. **Database Record**: An `evidence` record is inserted into the database containing the file URL, SHA-256 hash, MIME type, original filename, and upload timestamp.
-9. **Response**: The backend returns the created evidence record including the public URL and hash.
+7. **Proxy URL Generation**: A relative `/api/evidence/file/:evidenceId` proxy URL is returned to the client rather than exposing the underlying cloud storage link.
+8. **Database Record**: An `evidence` record is inserted into the database containing the proxy URL snippet, SHA-256 hash, MIME type, original filename, and upload timestamp.
+9. **Access Check (Download)**: Whenever the proxy URL is clicked or embedded, the backend authenticates the user's cookies/JWT and strictly enforces that ONLY the original citizen or heavily-vetted admins/assigned investigators are legally permitted to view the raw image buffer.
 
 ---
 
@@ -873,7 +867,15 @@ Evidence upload security is layered:
 4. **Filename sanitisation**: Original filenames are sanitised by replacing non-alphanumeric characters with underscores before use in the storage path
 5. **Ownership enforcement**: Citizens can only upload evidence for their own reports; investigators may upload for any report
 
-## 9.9 Anonymous Reporting Security
+## 9.9 Secure Evidence Proxy & Local Blob Rendering
+
+Public Supabase Storage URLs were entirely retired to prevent unauthorized external access. 
+Instead, the system utilizes a **Secure Node.js Image Proxy Stream (`/api/evidence/file/:id`)**. 
+1. The backend intercepts the evidence request, parses the JWT credentials, and strictly scrutinizes whether the user is the Citizen Owner, Assigned Investigator, or System Admin.
+2. If access naturally succeeds, the server downloads the buffer internally from the private cloud and pipes it straight to the Client. 
+3. Because browser cross-origin subresources strictly block complex cookies (`SameSite: lax`), the frontend implements highly tailored **`SecureImage` wrappers** which execute structured Axios XHR requests to grab the raw Blob in memory, actively creating ObjectURLs that bypass CORS rendering locks perfectly.
+
+## 9.10 Anonymous Reporting Security
 
 Anonymous reports are associated with a shared system-level "anonymous reporter" user account rather than being stored with null user IDs. This approach:
 
@@ -1320,9 +1322,14 @@ npm run dev       # Starts nodemon watcher on src/server.js
 ```bash
 cd frontend
 npm install
-# Create .env.local with NEXT_PUBLIC_API_URL
+# Configure .env.local: NEXT_PUBLIC_API_BASE_URL=http://43.204.73.62:5000/api
 npm run dev       # Starts Next.js development server on port 3000
 ```
+
+## 14.7 AWS EC2 Staging & Production Deployment
+For staging and production, the system transcends localhost and operates across standard Internet Protocol.
+- **Backend CORS:** `FRONTEND_URL` environments are exclusively configured to trust `http://43.204.73.62:3000`.
+- **Frontend Clients:** The `api.js` Axios instances and `.env.local` files hard-commit all external XHR network requests natively to the AWS Elastic IP at `http://43.204.73.62:5000/api`. This ensures the compiled Next.js output routes live requests authentically away from loopback.
 
 ---
 

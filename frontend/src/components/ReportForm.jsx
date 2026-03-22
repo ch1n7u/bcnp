@@ -233,6 +233,7 @@ export default function ReportForm() {
   const { isAuthenticated } = useAuth();
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [screenshotFile, setScreenshotFile] = useState(null);
   const [form, setForm] = useState({
     victimName: "",
@@ -443,8 +444,10 @@ export default function ReportForm() {
           headers: { "Content-Type": "multipart/form-data" }
         });
         setMessage(`Report submitted successfully with screenshot evidence. Report ID: ${data.report_id}`);
+        setShowSuccessModal(true);
       } catch (_uploadError) {
         setMessage(`Report submitted successfully (Report ID: ${data.report_id}), but screenshot upload failed.`);
+        setShowSuccessModal(true);
       }
 
       setScreenshotFile(null);
@@ -770,7 +773,38 @@ export default function ReportForm() {
           {isSubmitting ? "Submitting..." : "Submit Report"}
         </button>
       </form>
-      {message && <p className="mt-4 rounded-xl border border-sand bg-sand p-3 text-sm text-slate-700">{message}</p>}
+      {message && !showSuccessModal && <p className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{message}</p>}
+
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-md scale-100 rounded-3xl bg-white p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+              <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="mt-5 text-center font-display text-2xl font-bold text-slate-800">Report Submitted</h3>
+            <p className="mt-2 text-center text-[15px] font-medium text-slate-600 leading-relaxed">{message}</p>
+            <div className="mt-8 flex justify-center">
+              <button
+                type="button"
+                className="rounded-xl bg-ocean px-8 py-3 font-bold text-white shadow-md shadow-ocean/20 transition hover:bg-ocean/90 focus:outline-none focus:ring-4 focus:ring-ocean/20"
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  setMessage("");
+                  setForm({
+                    victimName: "", email: "", phoneNumber: "", crimeType: "Phishing", description: "",
+                    incidentDate: "", incidentTime: "", suspectDetails: "", financialLossAmount: "", state: "", city: ""
+                  });
+                  setScamDetails({});
+                }}
+              >
+                Okay
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

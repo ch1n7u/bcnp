@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import ProtectedRoute from "../../../components/ProtectedRoute";
+import AdminAllCases from "../../../components/AdminAllCases";
 
 function ActionCard({ href, title, description, accent, cta }) {
   return (
@@ -49,6 +50,8 @@ export default function AdminDashboardPage() {
             cta="Users"
           />
         </div>
+
+        <AdminAllCases />
       </section>
     </ProtectedRoute>
   );

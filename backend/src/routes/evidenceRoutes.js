@@ -21,4 +21,10 @@ router.get(
   evidenceController.getEvidenceByReport
 );
 
+router.get(
+  "/file/:evidenceId",
+  requireRole("admin", "investigator", "citizen"),
+  evidenceController.downloadEvidence
+);
+
 module.exports = router;
