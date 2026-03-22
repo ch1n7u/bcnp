@@ -1,0 +1,27 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Navigate to the project directory - adjust if your folder name is different
+            cd Cyber-Crime-Reporting || cd ~/Cyber-Crime-Reporting
+            
+            # Make the deployment script executable (just in case)
+            chmod +x deploy.sh
+            
+            # Execute the deployment script
+            ./deploy.sh
