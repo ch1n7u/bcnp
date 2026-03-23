@@ -110,7 +110,7 @@ export default function AuthForm({ mode = "login" }) {
       if (data?.errors?.length) {
         setError(data.errors.map((e) => e.message).join(" · "));
       } else if (err?.message === "Network Error") {
-        setError("Unable to reach server. Ensure backend is running at http://43.204.73.62:5000 and try again.");
+        setError("Unable to reach server. Ensure backend is running and Nginx proxy is configured for /api.");
       } else {
         setError(data?.message || err?.message || "Authentication failed");
       }
