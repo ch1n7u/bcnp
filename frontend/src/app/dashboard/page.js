@@ -14,7 +14,7 @@ function DashboardContent() {
     if (user?.role === "admin") {
       router.replace("/dashboard/admin");
     } else if (user?.role === "citizen") {
-      router.replace("/profile");
+      router.replace("/");
     }
   }, [router, user?.role]);
 

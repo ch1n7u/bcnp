@@ -29,7 +29,7 @@ export default function AuthForm({ mode = "login" }) {
           ? "/dashboard/admin"
           : user.role === "investigator"
             ? "/dashboard"
-            : "/profile";
+            : "/";
       router.replace(dest);
     }
   }, [isAuthenticated, user, router]);
@@ -96,7 +96,7 @@ export default function AuthForm({ mode = "login" }) {
           ? "/dashboard/admin"
           : data.user?.role === "investigator"
             ? "/dashboard"
-            : "/profile";
+            : "/";
       router.replace(destination);
 
       // Fallback in case Next navigation does not trigger in some browser states.

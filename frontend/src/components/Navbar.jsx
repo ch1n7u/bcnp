@@ -62,6 +62,8 @@ export default function Navbar() {
               <LanguageSwitcher />
             </div>
 
+            <Link href="/" className={getLinkClass("/", true)}>Home Page</Link>
+
             {!isAuthenticated && pathname !== "/resources" && !isAuthPage && (
               <Link href="/resources" className={getLinkClass("/resources", true)}>
                 Resources
@@ -70,7 +72,6 @@ export default function Navbar() {
 
             {isCitizen && (
               <>
-                <Link href="/report" className={getLinkClass("/report", true)}>Report</Link>
                 <Link href="/track" className={getLinkClass("/track", true)}>Track</Link>
                 <Link href="/resources" className={getLinkClass("/resources", true)}>Resources</Link>
                 <Link href="/profile" className={getLinkClass("/profile", true)}>Profile</Link>
