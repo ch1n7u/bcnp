@@ -43,8 +43,8 @@ export default function AuthForm({ mode = "login" }) {
 
     const trimmedPhone = form.phone.trim();
     if (isRegister) {
-      if (!/^\+?[0-9]{10,15}$/.test(trimmedPhone)) {
-        setError("Phone number is required and must be 10 to 15 digits.");
+      if (!/^[0-9]{10}$/.test(trimmedPhone)) {
+        setError("Phone number is required and must be exactly 10 digits.");
         return;
       }
       
@@ -147,12 +147,12 @@ export default function AuthForm({ mode = "login" }) {
             <label className="mb-1 block text-sm font-medium text-slate-700">Phone <span className="text-red-500">*</span></label>
             <input
               type="tel"
-              placeholder="e.g. +919876543210"
+              placeholder="e.g. 9876543210"
               className="w-full rounded-lg border p-3 focus:outline-none focus:ring-2 focus:ring-ocean/50"
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              pattern="^\+?[0-9]{10,15}$"
-              title="Phone must be 10 to 15 digits"
+              pattern="^[0-9]{10}$"
+              title="Phone must be exactly 10 digits"
               required
             />
           </div>
