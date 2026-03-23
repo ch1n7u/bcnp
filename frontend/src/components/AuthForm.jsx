@@ -134,7 +134,7 @@ export default function AuthForm({ mode = "login" }) {
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-700">Full Name <span className="text-red-500">*</span></label>
             <input
-              placeholder="e.g. John Doe"
+              placeholder="e.g. Aman Thakur"
               className="w-full rounded-lg border p-3 focus:outline-none focus:ring-2 focus:ring-ocean/50"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -161,7 +161,7 @@ export default function AuthForm({ mode = "login" }) {
           <label className="mb-1 block text-sm font-medium text-slate-700">Email <span className="text-red-500">*</span></label>
           <input
             type="email"
-            placeholder="e.g. citizen@example.com"
+            placeholder="e.g. citizen@gmail.com"
             className="w-full rounded-lg border p-3 focus:outline-none focus:ring-2 focus:ring-ocean/50"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
