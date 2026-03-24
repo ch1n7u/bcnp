@@ -70,6 +70,14 @@ CREATE INDEX IF NOT EXISTS idx_case_notes_report_id ON case_notes(report_id);
 CREATE INDEX IF NOT EXISTS idx_case_timeline_report_id ON case_timeline(report_id);
 CREATE INDEX IF NOT EXISTS idx_case_timeline_created_at ON case_timeline(created_at);
 
+-- Enable Row Level Security for all public tables.
+-- The backend uses the Supabase service role key, which can bypass RLS.
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE evidence ENABLE ROW LEVEL SECURITY;
+ALTER TABLE case_notes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE case_timeline ENABLE ROW LEVEL SECURITY;
+
 CREATE OR REPLACE FUNCTION get_crime_distribution()
 RETURNS TABLE (label text, value bigint)
 LANGUAGE SQL SECURITY DEFINER AS $$
