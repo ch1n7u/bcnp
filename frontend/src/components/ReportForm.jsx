@@ -57,6 +57,46 @@ const defaultStates = [
   "Outside India"
 ];
 
+const defaultCitiesByState = {
+  "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Tirupati", "Other"],
+  "Arunachal Pradesh": ["Itanagar", "Naharlagun", "Tawang", "Pasighat", "Other"],
+  Assam: ["Guwahati", "Dibrugarh", "Silchar", "Jorhat", "Other"],
+  Bihar: ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur", "Other"],
+  Chhattisgarh: ["Raipur", "Bhilai", "Bilaspur", "Korba", "Other"],
+  Goa: ["Panaji", "Margao", "Vasco da Gama", "Mapusa", "Other"],
+  Gujarat: ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Other"],
+  Haryana: ["Gurugram", "Faridabad", "Panipat", "Hisar", "Other"],
+  "Himachal Pradesh": ["Shimla", "Dharamshala", "Mandi", "Solan", "Other"],
+  Jharkhand: ["Ranchi", "Jamshedpur", "Dhanbad", "Bokaro", "Other"],
+  Karnataka: ["Bengaluru", "Mysuru", "Mangaluru", "Hubballi", "Other"],
+  Kerala: ["Kochi", "Thiruvananthapuram", "Kozhikode", "Thrissur", "Other"],
+  "Madhya Pradesh": ["Bhopal", "Indore", "Gwalior", "Jabalpur", "Other"],
+  Maharashtra: ["Mumbai", "Pune", "Nagpur", "Nashik", "Other"],
+  Manipur: ["Imphal", "Thoubal", "Bishnupur", "Churachandpur", "Other"],
+  Meghalaya: ["Shillong", "Tura", "Jowai", "Nongpoh", "Other"],
+  Mizoram: ["Aizawl", "Lunglei", "Champhai", "Kolasib", "Other"],
+  Nagaland: ["Kohima", "Dimapur", "Mokokchung", "Wokha", "Other"],
+  Odisha: ["Bhubaneswar", "Cuttack", "Rourkela", "Sambalpur", "Other"],
+  Punjab: ["Ludhiana", "Amritsar", "Jalandhar", "Patiala", "Other"],
+  Rajasthan: ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Other"],
+  Sikkim: ["Gangtok", "Namchi", "Gyalshing", "Mangan", "Other"],
+  "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Other"],
+  Telangana: ["Hyderabad", "Warangal", "Nizamabad", "Khammam", "Other"],
+  Tripura: ["Agartala", "Dharmanagar", "Udaipur", "Kailasahar", "Other"],
+  "Uttar Pradesh": ["Lucknow", "Kanpur", "Noida", "Varanasi", "Other"],
+  Uttarakhand: ["Dehradun", "Haridwar", "Haldwani", "Roorkee", "Other"],
+  "West Bengal": ["Kolkata", "Howrah", "Siliguri", "Durgapur", "Other"],
+  "Andaman and Nicobar Islands": ["Port Blair", "Diglipur", "Mayabunder", "Rangat", "Other"],
+  Chandigarh: ["Chandigarh", "Other"],
+  "Dadra and Nagar Haveli and Daman and Diu": ["Daman", "Silvassa", "Diu", "Other"],
+  Delhi: ["New Delhi", "North Delhi", "South Delhi", "Dwarka", "Other"],
+  "Jammu and Kashmir": ["Srinagar", "Jammu", "Anantnag", "Baramulla", "Other"],
+  Ladakh: ["Leh", "Kargil", "Nubra", "Other"],
+  Lakshadweep: ["Kavaratti", "Agatti", "Minicoy", "Other"],
+  Puducherry: ["Puducherry", "Karaikal", "Mahe", "Yanam", "Other"],
+  "Outside India": ["Other"]
+};
+
 const defaultPaymentApps = ["GPay", "PhonePe", "Paytm", "BHIM", "Amazon Pay", "Mobikwik", "Other"];
 
 const anonymousAllowedCrimeTypes = new Set(["Fake websites", "Phishing", "Social media harassment"]);
@@ -148,23 +188,6 @@ function getTodayLocalDate() {
   return new Date(now.getTime() - tzOffset).toISOString().slice(0, 10);
 }
 
-function parseTimeTo12Hour(time24) {
-  if (!time24 || !/^\d{2}:\d{2}$/.test(time24)) {
-    return { hour: "", minute: "", period: "" };
-  }
-
-  const [hourString, minute] = time24.split(":");
-  const hour24 = Number(hourString);
-  const period = hour24 >= 12 ? "PM" : "AM";
-  const hour12 = hour24 % 12 || 12;
-
-  return {
-    hour: String(hour12).padStart(2, "0"),
-    minute,
-    period
-  };
-}
-
 function build24HourTime({ hour, minute, period }) {
   if (!hour || !minute || !period) return "";
 
@@ -210,6 +233,7 @@ export default function ReportForm() {
   const { isAuthenticated } = useAuth();
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [screenshotFile, setScreenshotFile] = useState(null);
   const [form, setForm] = useState({
     victimName: "",
@@ -221,12 +245,14 @@ export default function ReportForm() {
     incidentTime: "",
     suspectDetails: "",
     financialLossAmount: "",
-    location: ""
+    state: "",
+    city: ""
   });
   const [paymentAppOptions, setPaymentAppOptions] = useState(defaultPaymentApps);
   const [stateOptions, setStateOptions] = useState(defaultStates);
   const [scamDetails, setScamDetails] = useState({});
   const [isPaymentAppMenuOpen, setIsPaymentAppMenuOpen] = useState(false);
+  const [incidentTimeParts, setIncidentTimeParts] = useState({ hour: "", minute: "", period: "" });
   const paymentAppMenuRef = useRef(null);
   const isAnonymous = !isAuthenticated;
   const allowedAnonymousTypesLabel = "Fake Website Scams, Phishing Scams, and Social Media Harassment";
@@ -281,6 +307,7 @@ export default function ReportForm() {
   }, []);
 
   const selectedScamFields = scamFieldConfig[form.crimeType] || [];
+  const cityOptions = form.state ? defaultCitiesByState[form.state] || ["Other"] : [];
 
   useEffect(() => {
     // Keep only fields that belong to the currently selected scam type.
@@ -322,13 +349,14 @@ export default function ReportForm() {
   };
 
   const updateIncidentTime = (nextPart) => {
-    const current = parseTimeTo12Hour(form.incidentTime);
-    const updated = { ...current, ...nextPart };
-
-    setForm((prev) => ({
-      ...prev,
-      incidentTime: build24HourTime(updated)
-    }));
+    setIncidentTimeParts((prev) => {
+      const updated = { ...prev, ...nextPart };
+      setForm((currentForm) => ({
+        ...currentForm,
+        incidentTime: build24HourTime(updated)
+      }));
+      return updated;
+    });
   };
 
   const submit = async (event) => {
@@ -350,6 +378,11 @@ export default function ReportForm() {
 
     if (!form.incidentDate || !form.incidentTime) {
       setMessage("Please provide the incident date and time.");
+      return;
+    }
+
+    if (!form.state || !form.city) {
+      setMessage("Please select both state and city.");
       return;
     }
 
@@ -395,7 +428,7 @@ export default function ReportForm() {
         email: form.email,
         crimeType: form.crimeType,
         description: form.description,
-        location: form.location,
+        location: `${form.city}, ${form.state}`,
         phoneNumber: cleanedPhoneNumber,
         incidentDateTime: incidentDate.toISOString(),
         suspectDetails: buildSuspectDetails(form.crimeType, scamDetails, form.suspectDetails),
@@ -411,8 +444,10 @@ export default function ReportForm() {
           headers: { "Content-Type": "multipart/form-data" }
         });
         setMessage(`Report submitted successfully with screenshot evidence. Report ID: ${data.report_id}`);
+        setShowSuccessModal(true);
       } catch (_uploadError) {
         setMessage(`Report submitted successfully (Report ID: ${data.report_id}), but screenshot upload failed.`);
+        setShowSuccessModal(true);
       }
 
       setScreenshotFile(null);
@@ -518,7 +553,7 @@ export default function ReportForm() {
           <div className="grid grid-cols-3 gap-2">
             <select
               className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm shadow-sm outline-none transition focus:border-ocean focus:ring-2 focus:ring-ocean/20"
-              value={parseTimeTo12Hour(form.incidentTime).hour}
+              value={incidentTimeParts.hour}
               onChange={(e) => updateIncidentTime({ hour: e.target.value })}
               required
             >
@@ -534,7 +569,7 @@ export default function ReportForm() {
 
             <select
               className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm shadow-sm outline-none transition focus:border-ocean focus:ring-2 focus:ring-ocean/20"
-              value={parseTimeTo12Hour(form.incidentTime).minute}
+              value={incidentTimeParts.minute}
               onChange={(e) => updateIncidentTime({ minute: e.target.value })}
               required
             >
@@ -550,7 +585,7 @@ export default function ReportForm() {
 
             <select
               className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm shadow-sm outline-none transition focus:border-ocean focus:ring-2 focus:ring-ocean/20"
-              value={parseTimeTo12Hour(form.incidentTime).period}
+              value={incidentTimeParts.period}
               onChange={(e) => updateIncidentTime({ period: e.target.value })}
               required
             >
@@ -580,8 +615,8 @@ export default function ReportForm() {
           <span className="text-sm font-semibold text-slate-700">State</span>
           <select
             className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 shadow-sm outline-none transition focus:border-ocean focus:ring-2 focus:ring-ocean/20"
-            value={form.location}
-            onChange={(e) => setForm({ ...form, location: e.target.value })}
+            value={form.state}
+            onChange={(e) => setForm({ ...form, state: e.target.value, city: "" })}
             required
           >
             <option value="" disabled>
@@ -590,6 +625,26 @@ export default function ReportForm() {
             {stateOptions.map((stateName) => (
               <option key={stateName} value={stateName}>
                 {stateName}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="grid gap-2 md:col-span-2">
+          <span className="text-sm font-semibold text-slate-700">City</span>
+          <select
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 shadow-sm outline-none transition focus:border-ocean focus:ring-2 focus:ring-ocean/20 disabled:cursor-not-allowed disabled:bg-slate-100"
+            value={form.city}
+            onChange={(e) => setForm({ ...form, city: e.target.value })}
+            disabled={!form.state}
+            required
+          >
+            <option value="" disabled>
+              {form.state ? "Select city" : "Select state first"}
+            </option>
+            {cityOptions.map((cityName) => (
+              <option key={cityName} value={cityName}>
+                {cityName}
               </option>
             ))}
           </select>
@@ -718,7 +773,38 @@ export default function ReportForm() {
           {isSubmitting ? "Submitting..." : "Submit Report"}
         </button>
       </form>
-      {message && <p className="mt-4 rounded-xl border border-sand bg-sand p-3 text-sm text-slate-700">{message}</p>}
+      {message && !showSuccessModal && <p className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{message}</p>}
+
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-md scale-100 rounded-3xl bg-white p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+              <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="mt-5 text-center font-display text-2xl font-bold text-slate-800">Report Submitted</h3>
+            <p className="mt-2 text-center text-[15px] font-medium text-slate-600 leading-relaxed">{message}</p>
+            <div className="mt-8 flex justify-center">
+              <button
+                type="button"
+                className="rounded-xl bg-ocean px-8 py-3 font-bold text-white shadow-md shadow-ocean/20 transition hover:bg-ocean/90 focus:outline-none focus:ring-4 focus:ring-ocean/20"
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  setMessage("");
+                  setForm({
+                    victimName: "", email: "", phoneNumber: "", crimeType: "Phishing", description: "",
+                    incidentDate: "", incidentTime: "", suspectDetails: "", financialLossAmount: "", state: "", city: ""
+                  });
+                  setScamDetails({});
+                }}
+              >
+                Okay
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

@@ -62,6 +62,8 @@ export default function Navbar() {
               <LanguageSwitcher />
             </div>
 
+            <Link href="/" className={getLinkClass("/", true)}>Home Page</Link>
+
             {!isAuthenticated && pathname !== "/resources" && !isAuthPage && (
               <Link href="/resources" className={getLinkClass("/resources", true)}>
                 Resources
@@ -70,76 +72,26 @@ export default function Navbar() {
 
             {isCitizen && (
               <>
-                {pathname !== "/report" && (
-                  <Link href="/report" className={getLinkClass("/report", true)}>
-                    Report
-                  </Link>
-                )}
-                {pathname !== "/track" && (
-                  <Link href="/track" className={getLinkClass("/track", true)}>
-                    Track
-                  </Link>
-                )}
-                {pathname !== "/resources" && (
-                  <Link href="/resources" className={getLinkClass("/resources", true)}>
-                    Resources
-                  </Link>
-                )}
-                {pathname !== "/dashboard" && (
-                  <Link href="/dashboard" className={getLinkClass("/dashboard", true)}>
-                    Dashboard
-                  </Link>
-                )}
-                {pathname !== "/profile" && (
-                  <Link href="/profile" className={getLinkClass("/profile", true)}>
-                    Profile
-                  </Link>
-                )}
+                <Link href="/track" className={getLinkClass("/track", true)}>Track</Link>
+                <Link href="/resources" className={getLinkClass("/resources", true)}>Resources</Link>
+                <Link href="/profile" className={getLinkClass("/profile", true)}>Profile</Link>
               </>
             )}
 
             {isInvestigator && (
               <>
-                {pathname !== "/track" && (
-                  <Link href="/track" className={getLinkClass("/track", true)}>
-                    Track
-                  </Link>
-                )}
-                {pathname !== "/dashboard" && (
-                  <Link href="/dashboard" className={getLinkClass("/dashboard", true)}>
-                    Dashboard
-                  </Link>
-                )}
-                {pathname !== "/profile" && (
-                  <Link href="/profile" className={getLinkClass("/profile", true)}>
-                    Profile
-                  </Link>
-                )}
+                <Link href="/track" className={getLinkClass("/track", true)}>Track</Link>
+                <Link href="/dashboard" className={getLinkClass("/dashboard", true)}>Dashboard</Link>
+                <Link href="/profile" className={getLinkClass("/profile", true)}>Profile</Link>
               </>
             )}
 
             {isAdmin && (
               <>
-                {pathname !== "/dashboard/admin" && (
-                  <Link href="/dashboard/admin" className={getLinkClass("/dashboard/admin", true)}>
-                    Admin Home
-                  </Link>
-                )}
-                {pathname !== "/dashboard/admin/cases" && (
-                  <Link href="/dashboard/admin/cases" className={getLinkClass("/dashboard/admin/cases", true)}>
-                    Case Assignment
-                  </Link>
-                )}
-                {pathname !== "/dashboard/admin/investigators" && (
-                  <Link href="/dashboard/admin/investigators" className={getLinkClass("/dashboard/admin/investigators", true)}>
-                    Investigators
-                  </Link>
-                )}
-                {pathname !== "/dashboard/analytics" && (
-                  <Link href="/dashboard/analytics" className={getLinkClass("/dashboard/analytics", true)}>
-                    Analytics
-                  </Link>
-                )}
+                <Link href="/dashboard/admin" className={getLinkClass("/dashboard/admin", true)}>Admin Home</Link>
+                <Link href="/dashboard/admin/cases" className={getLinkClass("/dashboard/admin/cases", true)}>Case Assignment</Link>
+                <Link href="/dashboard/admin/investigators" className={getLinkClass("/dashboard/admin/investigators", true)}>Investigators</Link>
+                <Link href="/dashboard/analytics" className={getLinkClass("/dashboard/analytics", true)}>Analytics</Link>
               </>
             )}
 

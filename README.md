@@ -5,7 +5,7 @@
 
 **Project Title:** Bharat Cyber Nyay Portal – Cyber Crime Reporting System
 ---
-**Developers:** Arka Dey, Arijeet Kuiry
+**Developers:** Arijeet Kuiry, Arka Dey
 ---
 **Course:** Bachelors of Computer Applications
 ---

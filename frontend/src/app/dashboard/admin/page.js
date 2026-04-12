@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import ProtectedRoute from "../../../components/ProtectedRoute";
+import AdminAllCases from "../../../components/AdminAllCases";
 
 function ActionCard({ href, title, description, accent, cta }) {
   return (
@@ -37,18 +38,20 @@ export default function AdminDashboardPage() {
           <ActionCard
             href="/dashboard/admin/investigators"
             title="Investigators"
-            description="See all investigators, check workload and availability, edit accounts, and remove investigators when needed."
+            description="See all investigators, create accounts, check workload and availability, edit profiles, and remove investigators when needed."
             accent="bg-green-100 text-green-700"
             cta="Team"
           />
           <ActionCard
-            href="/dashboard/admin/investigators#add-investigator"
-            title="Add Investigator"
-            description="Create a new investigator account and define login credentials from the dedicated investigator management page."
-            accent="bg-coral/10 text-coral"
-            cta="Create"
+            href="/dashboard/admin/users"
+            title="Registered Users"
+            description="Review all registered citizens on the platform and seamlessly delete invalid, abusive, or duplicate accounts."
+            accent="bg-purple-100 text-purple-700"
+            cta="Users"
           />
         </div>
+
+        <AdminAllCases />
       </section>
     </ProtectedRoute>
   );

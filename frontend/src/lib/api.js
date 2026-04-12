@@ -1,16 +1,9 @@
 import axios from "axios";
-import { getToken } from "./auth";
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api"
-});
-
-api.interceptors.request.use((config) => {
-  const token = getToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
+  // Default to same-origin API behind reverse proxy (e.g., Nginx on port 80).
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "/api",
+  withCredentials: true
 });
 
 export default api;

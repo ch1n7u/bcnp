@@ -1,6 +1,7 @@
 const { supabaseAdmin } = require("../config/db");
 const { getAnonymousReporterId } = require("../utils/anonymousReporter");
 const { PAYMENT_APPS, INDIAN_STATES_AND_UTS } = require("../config/reportMetadata");
+const { logCaseEvent } = require("../services/caseTimelineService");
 
 const ANONYMOUS_ALLOWED_CRIME_TYPES = new Set([
   "Fake websites",
@@ -43,6 +44,20 @@ async function createReport(req, res, next) {
       .single();
 
     if (error) return next(new Error(error.message));
+
+    await logCaseEvent({
+      reportId: report.report_id,
+      actionType: "CASE_CREATED",
+      actorId: req.user?.id || null,
+      actorRole: req.user?.role || "anonymous",
+      metadata: {
+        crime_type: report.crime_type,
+        initial_status: report.status,
+        location: report.location
+      },
+      req
+    });
+
     return res.status(201).json(report);
   } catch (error) {
     return next(error);
@@ -71,27 +86,43 @@ async function getMyReports(req, res, next) {
   }
 }
 
+function generateProxyUrl(req, evidenceId) {
+  return `${req.protocol}://${req.get("host")}/api/evidence/file/${evidenceId}`;
+}
+
 async function getReports(req, res, next) {
   try {
     const { crimeType, status, investigatorId } = req.query;
 
     let query = supabaseAdmin
       .from("reports")
-      .select("*, citizen:users!reports_user_fk(name), investigator:users!reports_investigator_fk(name)")
+      .select("*, citizen:users!reports_user_fk(name), investigator:users!reports_investigator_fk(name), evidence(evidence_id, file_url, original_name, mime_type)")
       .order("created_at", { ascending: false });
 
     if (crimeType) query = query.eq("crime_type", crimeType);
     if (status) query = query.eq("status", status);
-    if (investigatorId) query = query.eq("assigned_investigator_id", investigatorId);
+    
+    if (req.user.role === "investigator") {
+      query = query.eq("assigned_investigator_id", req.user.id);
+    } else if (investigatorId) {
+      query = query.eq("assigned_investigator_id", investigatorId);
+    }
 
     const { data: reports, error } = await query;
     if (error) return next(new Error(error.message));
 
-    const result = (reports || []).map((r) => ({
-      ...r,
-      citizen_name: r.citizen?.name,
-      investigator_name: r.investigator?.name
-    }));
+    const result = (reports || []).map((r) => {
+      const enrichedEvidence = (r.evidence || []).map((ev) => ({
+        ...ev,
+        file_url: generateProxyUrl(req, ev.evidence_id)
+      }));
+      return {
+        ...r,
+        citizen_name: r.citizen?.name,
+        investigator_name: r.investigator?.name,
+        evidence: enrichedEvidence
+      };
+    });
 
     return res.json(result);
   } catch (error) {
@@ -114,6 +145,10 @@ async function getReportById(req, res, next) {
     }
 
     if (req.user.role === "citizen" && String(report.user_id) !== String(req.user.id)) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    if (req.user.role === "investigator" && String(report.assigned_investigator_id) !== String(req.user.id)) {
       return res.status(403).json({ message: "Forbidden" });
     }
 

@@ -45,7 +45,9 @@ export default function ProfileSummary() {
         <div className="mt-4 grid gap-2 text-sm md:grid-cols-2">
           <p><strong>Name:</strong> {user?.name}</p>
           <p><strong>Email:</strong> {user?.email}</p>
-          <p><strong>User ID:</strong> {user?.id}</p>
+          {(user?.role === "admin" || user?.role === "investigator") && (
+            <p><strong>User ID:</strong> {user?.id}</p>
+          )}
           <p><strong>Role:</strong> {user?.role}</p>
           <p><strong>Joined:</strong> {user?.created_at ? new Date(user.created_at).toLocaleString() : "-"}</p>
         </div>

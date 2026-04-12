@@ -2,45 +2,40 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getToken, getUser, logout as clearAuthStorage, setAuth } from "../lib/auth";
+import { getUser, logout as clearAuthStorage, setAuth } from "../lib/auth";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const router = useRouter();
-  const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setToken(getToken());
     setUser(getUser());
     setLoading(false);
   }, []);
 
-  const login = ({ token: accessToken, user: authUser }) => {
-    setAuth(accessToken, authUser);
-    setToken(accessToken);
+  const login = ({ user: authUser }) => {
+    setAuth(authUser);
     setUser(authUser);
   };
 
-  const logout = () => {
-    clearAuthStorage();
-    setToken(null);
+  const logout = async () => {
+    await clearAuthStorage();
     setUser(null);
     router.push("/login");
   };
 
   const value = useMemo(
     () => ({
-      token,
       user,
       loading,
-      isAuthenticated: Boolean(token),
+      isAuthenticated: Boolean(user),
       login,
       logout
     }),
-    [token, user, loading]
+    [user, loading]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

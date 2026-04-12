@@ -1,45 +1,20 @@
-# Dependencies
+# Node
 node_modules/
-backend/node_modules/
-frontend/node_modules/
+npm-debug.log*
 
-# Build outputs
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Next.js
 .next/
 out/
-dist/
-build/
-coverage/
 
 # Logs
+logs
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
 
-# Environment files
-.env
-.env.*
-!.env.example
-
-# OS / editor
+# OS
 .DS_Store
 Thumbs.db
-.vscode/
-.idea/
-
-# Runtime / temp files
-tmp/
-temp/
-*.tmp
-
-# Uploads and generated files
-uploads/*
-!uploads/.gitkeep
-backend/uploads/*
-!backend/uploads/.gitkeep
-
-# Caches
-.eslintcache
-.cache/
-frontend/.next/cache/

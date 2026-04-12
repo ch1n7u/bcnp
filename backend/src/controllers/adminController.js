@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const { supabaseAdmin } = require("../config/db");
 const { createUser, findByEmail, listUsers } = require("../models/userModel");
+const { logCaseEvent } = require("../services/caseTimelineService");
 
 async function getUsers(req, res, next) {
   try {
@@ -189,9 +190,23 @@ async function assignInvestigatorByAdmin(req, res, next) {
   try {
     const { reportId, investigatorId } = req.body;
 
+    const { data: currentReport, error: currentReportError } = await supabaseAdmin
+      .from("reports")
+      .select("report_id, assigned_investigator_id")
+      .eq("report_id", reportId)
+      .maybeSingle();
+
+    if (currentReportError) {
+      return next(new Error(currentReportError.message));
+    }
+
+    if (!currentReport) {
+      return res.status(404).json({ message: "Report not found" });
+    }
+
     const { data: investigator, error: investigatorError } = await supabaseAdmin
       .from("users")
-      .select("id, role")
+      .select("id, role, name")
       .eq("id", investigatorId)
       .eq("role", "investigator")
       .maybeSingle();
@@ -219,7 +234,45 @@ async function assignInvestigatorByAdmin(req, res, next) {
       return res.status(404).json({ message: "Report not found" });
     }
 
+    await logCaseEvent({
+      reportId,
+      actionType: "INVESTIGATOR_ASSIGNED",
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      metadata: {
+        previous_investigator_id: currentReport.assigned_investigator_id,
+        new_investigator_id: investigator.id,
+        new_investigator_name: investigator.name
+      },
+      req
+    });
+
     return res.json({ success: true, report: updated });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function deleteUser(req, res, next) {
+  try {
+    const { userId } = req.params;
+
+    const { data: deleted, error } = await supabaseAdmin
+      .from("users")
+      .delete()
+      .eq("id", userId)
+      .select("id, name, email")
+      .maybeSingle();
+
+    if (error) {
+      return next(new Error(error.message));
+    }
+
+    if (!deleted) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.json({ success: true, user: deleted });
   } catch (error) {
     return next(error);
   }
@@ -231,5 +284,6 @@ module.exports = {
   assignInvestigatorByAdmin,
   createInvestigator,
   updateInvestigator,
-  deleteInvestigator
+  deleteInvestigator,
+  deleteUser
 };
