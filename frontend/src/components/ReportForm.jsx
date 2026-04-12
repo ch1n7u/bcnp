@@ -550,9 +550,9 @@ export default function ReportForm() {
 
         <label className="grid gap-2">
           <span className="text-sm font-semibold text-slate-700">Incident Time</span>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-1 sm:gap-2">
             <select
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm shadow-sm outline-none transition focus:border-ocean focus:ring-2 focus:ring-ocean/20"
+              className="w-full rounded-xl border border-slate-200 bg-white px-2 sm:px-3 py-3 text-xs sm:text-sm shadow-sm outline-none transition focus:border-ocean focus:ring-2 focus:ring-ocean/20"
               value={incidentTimeParts.hour}
               onChange={(e) => updateIncidentTime({ hour: e.target.value })}
               required
@@ -568,13 +568,13 @@ export default function ReportForm() {
             </select>
 
             <select
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm shadow-sm outline-none transition focus:border-ocean focus:ring-2 focus:ring-ocean/20"
+              className="w-full rounded-xl border border-slate-200 bg-white px-2 sm:px-3 py-3 text-xs sm:text-sm shadow-sm outline-none transition focus:border-ocean focus:ring-2 focus:ring-ocean/20"
               value={incidentTimeParts.minute}
               onChange={(e) => updateIncidentTime({ minute: e.target.value })}
               required
             >
               <option value="" disabled>
-                Minute
+                Min
               </option>
               {minuteOptions.map((minute) => (
                 <option key={minute} value={minute}>
@@ -584,7 +584,7 @@ export default function ReportForm() {
             </select>
 
             <select
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm shadow-sm outline-none transition focus:border-ocean focus:ring-2 focus:ring-ocean/20"
+              className="w-full rounded-xl border border-slate-200 bg-white px-2 sm:px-3 py-3 text-xs sm:text-sm shadow-sm outline-none transition focus:border-ocean focus:ring-2 focus:ring-ocean/20"
               value={incidentTimeParts.period}
               onChange={(e) => updateIncidentTime({ period: e.target.value })}
               required

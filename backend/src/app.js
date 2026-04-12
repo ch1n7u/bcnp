@@ -11,7 +11,7 @@ const { notFound, errorHandler } = require("./middleware/errorHandler");
 const app = express();
 app.use(cookieParser());
 
-const localDevOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+const localDevOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(:\d+)?$/;
 
 function isAllowedOrigin(origin) {
   if (!origin) {

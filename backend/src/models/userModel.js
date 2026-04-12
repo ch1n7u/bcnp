@@ -23,7 +23,7 @@ async function findById(id) {
   return data;
 }
 
-async function createUser({ name, email, phone, passwordHash, role = "citizen" }) {
+async function createUser({ name, email, passwordHash, role = "citizen" }) {
   const normalizedEmail = email.trim().toLowerCase();
 
   const { data, error } = await supabaseAdmin

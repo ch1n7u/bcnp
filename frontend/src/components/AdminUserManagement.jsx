@@ -92,7 +92,16 @@ export default function AdminUserManagement() {
                         {user.role}
                       </span>
                     </td>
-                    <td className="p-2">{new Date(user.created_at).toLocaleDateString()}</td>
+                    <td className="p-2">
+                      {user.created_at ? (() => {
+                        const dateStr = user.created_at.endsWith('Z') ? user.created_at : `${user.created_at}Z`;
+                        const d = new Date(dateStr);
+                        const day = String(d.getDate()).padStart(2, '0');
+                        const month = String(d.getMonth() + 1).padStart(2, '0');
+                        const year = d.getFullYear();
+                        return `${day}/${month}/${year}`;
+                      })() : "N/A"}
+                    </td>
                     <td className="p-2">
                       <button
                         className="rounded bg-red-600 px-3 py-1 text-white transition hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"

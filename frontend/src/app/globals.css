@@ -129,3 +129,11 @@ input[type="password"]::-webkit-contacts-auto-fill-button {
   position: absolute;
   right: 0;
 }
+
+/* Force hide Next.js development indicator */
+nextjs-portal,
+#__next-build-watcher,
+#__next-route-announcer {
+  display: none !important;
+}
+

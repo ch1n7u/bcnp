@@ -1,19 +1,119 @@
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 const { signAccessToken } = require("../utils/jwt");
 const { supabaseAdmin } = require("../config/db");
 const { findByEmail, findById, createUser } = require("../models/userModel");
+const { otpStore, rateLimitStore } = require("../utils/store");
+const { sendOtpEmail } = require("../utils/mailer");
 
-async function register(req, res, next) {
+async function sendOtp(req, res, next) {
   try {
-    const { name, email, password, phone } = req.body;
+    const { email } = req.body;
 
-    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
-    if (!strongPasswordRegex.test(password)) {
-      return res.status(400).json({ message: "Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character." });
+    // Rate limiting check
+    let rateData = rateLimitStore.get(email) || { count: 0, blockedUntil: 0, nextAllowedAt: 0 };
+    const now = Date.now();
+
+    if (rateData.blockedUntil > now) {
+        return res.status(429).json({ message: "You have exceeded the maximum resend attempts. Please try again after 6 hours." });
+    }
+
+    if (rateData.count >= 4) {
+        rateData.blockedUntil = now + 6 * 60 * 60 * 1000;
+        rateLimitStore.set(email, rateData, 6 * 60 * 60);
+        return res.status(429).json({ message: "You have exceeded the maximum resend attempts. Please try again after 6 hours." });
+    }
+
+    if (rateData.nextAllowedAt > now) {
+        const waitSeconds = Math.ceil((rateData.nextAllowedAt - now) / 1000);
+        return res.status(429).json({ message: `Please wait ${waitSeconds} seconds before requesting a new OTP.` });
     }
 
     const existing = await findByEmail(email);
+    if (existing) {
+      return res.status(409).json({ message: "Email already registered" });
+    }
 
+    // Generate 6 digit OTP
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Store in memory with verify status and the code itself
+    otpStore.set(email, { 
+      email,
+      verified: false,
+      otpCode
+    }, 300); // 5 min TTL
+
+    await sendOtpEmail(email, otpCode);
+
+    // Update rate limit counts
+    rateData.count += 1;
+    let waitLimit = 30; // Default
+    if (rateData.count === 1) {
+        waitLimit = 30;
+        rateData.nextAllowedAt = now + 30 * 1000;
+    } else if (rateData.count === 2) {
+        waitLimit = 30;
+        rateData.nextAllowedAt = now + 30 * 1000;
+    } else if (rateData.count === 3) {
+        waitLimit = 60;
+        rateData.nextAllowedAt = now + 60 * 1000;
+    } else if (rateData.count === 4) {
+        waitLimit = 120;
+        rateData.nextAllowedAt = now + 120 * 1000;
+    }
+    
+    rateLimitStore.set(email, rateData, 6 * 60 * 60);
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP sent to email successfully. Please verify it.",
+      waitLimit
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function verifyOtp(req, res, next) {
+  try {
+    const { email, otp } = req.body;
+
+    const data = otpStore.get(email);
+    if (!data) {
+      return res.status(400).json({ message: "OTP has expired or not requested." });
+    }
+
+    if (data.otpCode !== otp) {
+      return res.status(400).json({ message: "Invalid OTP." });
+    }
+
+    // Mark as verified!
+    data.verified = true;
+    // Re-save with updated status (maintains same expiry)
+    // Actually our MemoryStore get returns the live object, so we can just modify it.
+
+    return res.status(200).json({
+      success: true,
+      message: "Email verified successfully! You can now complete registration.",
+    });
+
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function registerFinal(req, res, next) {
+  try {
+    const { email, name, password } = req.body;
+
+    const data = otpStore.get(email);
+    if (!data || !data.verified) {
+      return res.status(400).json({ message: "Please verify your email with OTP first." });
+    }
+
+    // Double check email hasn't been registered in the meantime
+    const existing = await findByEmail(email);
     if (existing) {
       return res.status(409).json({ message: "Email already registered" });
     }
@@ -23,10 +123,11 @@ async function register(req, res, next) {
     const user = await createUser({
       name,
       email,
-      phone,
       passwordHash,
       role: "citizen"
     });
+
+    otpStore.delete(email);
 
     return res.status(201).json({
       success: true,
@@ -37,6 +138,125 @@ async function register(req, res, next) {
         email: user.email,
         role: user.role
       }
+    });
+
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function forgotPasswordSendOtp(req, res, next) {
+  try {
+    const { email } = req.body;
+
+    const rateKey = `reset_${email}`;
+    let rateData = rateLimitStore.get(rateKey) || { count: 0, blockedUntil: 0, nextAllowedAt: 0 };
+    const now = Date.now();
+
+    if (rateData.blockedUntil > now) {
+      return res.status(429).json({ message: "Too many attempts. Please try again after 6 hours." });
+    }
+
+    if (rateData.count >= 4) {
+      rateData.blockedUntil = now + 6 * 60 * 60 * 1000;
+      rateLimitStore.set(rateKey, rateData, 6 * 60 * 60);
+      return res.status(429).json({ message: "Too many attempts. Please try again after 6 hours." });
+    }
+
+    if (rateData.nextAllowedAt > now) {
+      const waitSeconds = Math.ceil((rateData.nextAllowedAt - now) / 1000);
+      return res.status(429).json({ message: `Please wait ${waitSeconds} seconds before requesting a new OTP.`, waitLimit: waitSeconds });
+    }
+
+    const user = await findByEmail(email);
+    if (!user) {
+      return res.status(404).json({ message: "No account found with this email address." });
+    }
+
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const resetKey = `reset_${email}`;
+    otpStore.set(resetKey, {
+      email,
+      verified: false,
+      otpCode
+    }, 300); // 5 min TTL
+
+    await sendOtpEmail(email, otpCode);
+
+    rateData.count += 1;
+    let waitLimit = 30;
+    if (rateData.count === 1) { waitLimit = 30; rateData.nextAllowedAt = now + 30 * 1000; }
+    else if (rateData.count === 2) { waitLimit = 30; rateData.nextAllowedAt = now + 30 * 1000; }
+    else if (rateData.count === 3) { waitLimit = 60; rateData.nextAllowedAt = now + 60 * 1000; }
+    else if (rateData.count === 4) { waitLimit = 120; rateData.nextAllowedAt = now + 120 * 1000; }
+
+    rateLimitStore.set(rateKey, rateData, 6 * 60 * 60);
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset OTP sent to your email.",
+      waitLimit
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function forgotPasswordVerifyOtp(req, res, next) {
+  try {
+    const { email, otp } = req.body;
+
+    const resetKey = `reset_${email}`;
+    const data = otpStore.get(resetKey);
+    if (!data) {
+      return res.status(400).json({ message: "OTP has expired or not requested." });
+    }
+
+    if (data.otpCode !== otp) {
+      return res.status(400).json({ message: "Invalid OTP." });
+    }
+
+    data.verified = true;
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP verified. You can now set a new password."
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function resetPassword(req, res, next) {
+  try {
+    const { email, password } = req.body;
+
+    const resetKey = `reset_${email}`;
+    const data = otpStore.get(resetKey);
+    if (!data || !data.verified) {
+      return res.status(400).json({ message: "Please verify your email with OTP first." });
+    }
+
+    const user = await findByEmail(email);
+    if (!user) {
+      return res.status(404).json({ message: "No account found with this email." });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    const { error } = await supabaseAdmin
+      .from("users")
+      .update({ password_hash: passwordHash })
+      .eq("email", email.trim().toLowerCase());
+
+    if (error) throw new Error(error.message);
+
+    otpStore.delete(resetKey);
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset successfully! Please login with your new password."
     });
   } catch (error) {
     return next(error);
@@ -158,7 +378,12 @@ async function logout(req, res, next) {
 }
 
 module.exports = {
-  register,
+  sendOtp,
+  verifyOtp,
+  registerFinal,
+  forgotPasswordSendOtp,
+  forgotPasswordVerifyOtp,
+  resetPassword,
   login,
   me,
   logout

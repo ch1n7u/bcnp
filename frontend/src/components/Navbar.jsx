@@ -41,7 +41,7 @@ export default function Navbar() {
 
           <button
             type="button"
-            className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white/85 px-3 py-2 text-slate-700 md:hidden"
+            className="inline-flex relative z-50 cursor-pointer touch-manipulation items-center justify-center rounded-lg border border-slate-200 bg-white/90 px-3 py-2 text-slate-800 shadow-sm active:scale-95 transition-all md:hidden"
             onClick={() => setIsMenuOpen((prev) => !prev)}
             aria-expanded={isMenuOpen}
             aria-label="Toggle navigation menu"

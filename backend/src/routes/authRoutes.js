@@ -3,7 +3,7 @@ const rateLimit = require("express-rate-limit");
 const authController = require("../controllers/authController");
 const validate = require("../middleware/validate");
 const authenticate = require("../middleware/auth");
-const { registerSchema, loginSchema } = require("../validations/authValidation");
+const { registerSchema, sendOtpSchema, loginSchema } = require("../validations/authValidation");
 
 const router = express.Router();
 
@@ -22,7 +22,13 @@ const registerRateLimiter = rateLimit({
 	message: { message: "Too many registration attempts. Please try again later." }
 });
 
-router.post("/register", registerRateLimiter, validate(registerSchema), authController.register);
+
+router.post("/send-otp", registerRateLimiter, validate(sendOtpSchema), authController.sendOtp);
+router.post("/verify-otp", registerRateLimiter, authController.verifyOtp);
+router.post("/register-final", registerRateLimiter, validate(registerSchema), authController.registerFinal);
+router.post("/forgot-password/send-otp", loginRateLimiter, authController.forgotPasswordSendOtp);
+router.post("/forgot-password/verify-otp", loginRateLimiter, authController.forgotPasswordVerifyOtp);
+router.post("/forgot-password/reset", loginRateLimiter, authController.resetPassword);
 router.post("/login", loginRateLimiter, validate(loginSchema), authController.login);
 router.post("/logout", authController.logout);
 router.get("/me", authenticate, authController.me);

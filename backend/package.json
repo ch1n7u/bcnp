@@ -16,6 +16,7 @@
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "disposable-email-domains": "^1.0.62",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "express-rate-limit": "^7.4.1",
@@ -24,7 +25,9 @@
     "hpp": "^0.2.3",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
+    "nodemailer": "^8.0.5",
     "pg": "^8.13.1",
+    "svg-captcha": "^1.4.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
