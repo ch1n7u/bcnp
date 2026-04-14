@@ -885,6 +885,22 @@ Anonymous reports are associated with a shared system-level "anonymous reporter"
 - Restricts anonymous reporting to a limited set of crime categories
 - Prevents anonymous users from accessing reports through the authenticated tracking interface
 
+## 9.11 Legal and Regulatory Compliance (India)
+
+The portal is designed to align with applicable Indian cyber law and data-protection requirements. **Information Technology Act, 2000** provisions are operationally relevant to this system: Section 43A requires reasonable security practices for handling sensitive data; Sections 66C and 66D address identity theft and personation fraud patterns commonly reported on the platform; Section 72A supports confidentiality obligations; and Section 70B anchors national incident response through CERT-In. Under the **IT (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011**, the portal incorporates privacy-policy disclosure, purpose-limited collection, consent-aware processing, and access-controlled handling of personal and incident records. The **Digital Personal Data Protection Act, 2023** further governs personal-data processing by requiring lawful purpose, data minimisation, appropriate safeguards, and support for user rights and breach-response duties as and when enforceable provisions are notified. Operationally, the platform is also aligned with **CERT-In Directions** issued under Section 70B, including incident-reporting readiness, time-synchronised logging, and retention practices expected from service providers/intermediaries. Finally, **OWASP Top 10** is used as a non-statutory secure engineering baseline to reduce prevalent web-application risks such as broken access control, injection, and cryptographic weaknesses.
+
+## 9.12 Compliance-to-Feature Mapping
+
+| Law / Standard | Primary Compliance Focus | Implemented Portal Features / Controls |
+|---|---|---|
+| **IT Act, 2000** (Sec. 43A, 66C, 66D, 72A, 70B) | Reasonable security, identity-fraud relevance, confidentiality, incident response ecosystem | JWT authentication, bcrypt password hashing, RBAC, secure evidence access control, audit-friendly case records, incident logging readiness |
+| **IT SPDI Rules, 2011** | Privacy policy, informed collection, purpose limitation, security safeguards for sensitive data | Structured report fields, validation via Zod, role-based data access, controlled evidence upload pipeline, secure storage and retrieval boundaries |
+| **DPDP Act, 2023** | Lawful processing of personal data, data minimisation, safeguards, user-rights enablement | Need-based data collection in forms, authenticated profile/report access, restricted admin/investigator actions, security middleware stack (Helmet, CORS, rate limiting) |
+| **CERT-In Directions** (under Sec. 70B) | Incident reporting preparedness, log retention, traceability, time-synchronised operations | Backend logging and monitoring readiness, timestamped records (`created_at`, `updated_at`, `upload_time`), traceable case/evidence lifecycle, security-event response workflow support |
+| **OWASP Top 10** (best-practice baseline) | Prevention of common web application risks | Input validation (injection risk reduction), strong authentication and session controls, access control enforcement, secure headers, upload restrictions, brute-force throttling |
+
+**Note:** This mapping describes prototype-level alignment of implemented controls; statutory compliance in production deployment requires legal review, periodic audits, and operational evidence.
+
 ---
 
 ---
@@ -1521,6 +1537,14 @@ The project reflects a commitment to leveraging technology for civic good and re
 
 20. Sharma, A., & Gupta, R. (2022). *Cyber Crime in India: Trends, Challenges and Countermeasures.* International Journal of Computer Applications, 184(14), 1–8.
 21. Fielding, R. T. (2000). *Architectural Styles and the Design of Network-based Software Architectures* (Doctoral dissertation, University of California, Irvine). [REST Architecture]
+
+## 18.5 Legal and Compliance References
+
+22. Government of India. (2000). *Information Technology Act, 2000* (as amended). https://www.meity.gov.in/content/information-technology-act-2000
+23. Government of India. (2011). *Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011.*
+24. Government of India. (2023). *Digital Personal Data Protection Act, 2023.*
+25. CERT-In, Ministry of Electronics and Information Technology. (2022). *Directions relating to information security practices, procedure, prevention, response and reporting of cyber incidents under Section 70B of the IT Act.*
+26. OWASP Foundation. (2023). *OWASP Top 10: Web Application Security Risks.* https://owasp.org/www-project-top-ten/
 
 ---
 
