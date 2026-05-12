@@ -21,10 +21,6 @@ sudo apt install -y nodejs npm
 echo "Installing PM2 globally..."
 sudo npm install -g pm2
 
-# Install git (if not already installed)
-echo "Installing git..."
-sudo apt install -y git
-
 # Files are now transferred directly by GitHub Actions via SCP
 echo "Local files updated, beginning installation and restart steps..."
 
