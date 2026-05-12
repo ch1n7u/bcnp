@@ -13,6 +13,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Prepare target directory on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo mkdir -p /var/www/bcnp
+            sudo chown $USER:$USER /var/www/bcnp
+            sudo chmod 755 /var/www/bcnp
+
       - name: Copy latest code to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
