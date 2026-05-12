@@ -74,11 +74,12 @@ cd backend
 
 echo "Installing backend dependencies..."
 sudo npm install
+sudo npm audit fix
 
 echo "Restarting backend process..."
 # If PM2 is already managing a process named "ccr-backend", it restarts it.
 # Otherwise, it starts the process and names it "ccr-backend".
-sudo pm2 restart ccr-backend || sudo pm2 start src/server.js --name "ccr-backend"
+sudo pm2 restart ccr-backend || sudo pm2 start src/server.js --name "backend"
 
 # Go back to root
 cd ..
@@ -89,6 +90,7 @@ cd frontend
 
 echo "Installing frontend dependencies..."
 sudo npm install
+sudo npm audit fix
 
 echo "Building frontend..."
 sudo npm run build
@@ -96,7 +98,7 @@ sudo npm run build
 echo "Restarting frontend process..."
 # If PM2 is already managing a process named "ccr-frontend", it restarts it.
 # Otherwise, it starts the Next.js process and names it "ccr-frontend".
-sudo pm2 restart ccr-frontend || sudo pm2 start npm --name "ccr-frontend" -- start
+sudo pm2 restart ccr-frontend || sudo pm2 start npm --name "frontend" -- start
 
 # ================= PM2 STARTUP =================
 echo "Configuring PM2 to start on system boot..."
