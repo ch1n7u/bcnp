@@ -2,8 +2,6 @@
 
 # Ensure script stops on first error
 set -e
-echo "Installing nginx"
-sudo apt install nginx
 
 echo "============================================="
 echo "Starting Deployment..."

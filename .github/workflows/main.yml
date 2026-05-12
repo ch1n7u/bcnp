@@ -23,6 +23,15 @@ jobs:
           target: "/var/www/bcnp"
           strip_components: 0
 
+      - name: Install nginx
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo apt install nginx -y
+
       - name: Run Deployment Script on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
