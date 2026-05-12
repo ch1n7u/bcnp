@@ -1,0 +1,23 @@
+1. Issue: No explicit privacy policy artifact and no consent capture in reporting flow (no policy files found; report form goes directly to submit in frontend/src/components/ReportForm.jsx#L474 and frontend/src/components/ReportForm.jsx#L773).
+   Impact: SPDI Rules (Rule 4/5) and DPDP notice/consent obligations are weakly evidenced for audit.
+   Fix: Add published Privacy Policy page + consent checkbox; store consent version/timestamp/IP in DB (users/reports metadata).
+
+2. Issue: Account enumeration via auth responses (e.g., "Email already registered" / "No account found") in backend/src/controllers/authController.js#L34 and backend/src/controllers/authController.js#L173.
+   Impact: Increases user-privacy risk and targeted credential attacks (OWASP).
+   Fix: Return generic responses for auth recovery/registration discovery flows; log specifics server-side only.
+
+3. Issue: Password policy is strong only on frontend, weak/inconsistent on backend (frontend/src/components/AuthForm.jsx#L204 vs backend/src/validations/authValidation.js#L73); reset route lacks schema validation (backend/src/routes/authRoutes.js#L31).
+   Impact: API clients can bypass UI and set weak passwords; authentication control gap.
+   Fix: Enforce one server-side strong-password schema for register + reset endpoints.
+
+4. Issue: OTP controls are limited (plain OTP comparison in backend/src/controllers/authController.js#L87; in-memory OTP store in backend/src/utils/store.js#L1).
+   Impact: Brute-force/replay resilience and operational reliability are weaker than expected for sensitive auth flows.
+   Fix: Store hashed OTP, add per-OTP attempt caps/lockouts, and move OTP/rate-limit state to Redis or DB.
+
+5. Issue: Session token is both cookie-set and returned in response body (backend/src/controllers/authController.js#L284 and backend/src/controllers/authController.js#L298); middleware also accepts Bearer token (backend/src/middleware/auth.js#L6).
+   Impact: Expands token exposure surface (XSS/log leakage risk) contrary to least-exposure practice.
+   Fix: Prefer cookie-only auth (HttpOnly/Secure/SameSite) and remove token from JSON response unless strictly required.
+
+6. Issue: CERT-In operational compliance is partially implemented: logging exists (backend/src/services/caseTimelineService.js#L23, backend/src/db/schema.sql#L51) but no codified retention/incident-report runbook in codebase.
+   Impact: Difficult to evidence 180-day log retention and incident-reporting readiness during audit.
+   Fix: Add documented retention policy + purge/archival jobs + incident escalation SOP aligned to CERT-In timelines.
