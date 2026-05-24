@@ -94,7 +94,7 @@ sudo npm audit fix
 echo "Restarting backend process..."
 # If PM2 is already managing a process named "backend", it restarts it.
 # Otherwise, it starts the process and names it "backend".
-sudo pm2 restart backend || sudo pm2 start src/server.js --name "backend"
+sudo pm2 restart backend --update-env || sudo pm2 start src/server.js --name "backend" --update-env
 
 # Go back to root
 cd ..
@@ -114,7 +114,7 @@ sudo npm run build
 echo "Restarting frontend process..."
 # If PM2 is already managing a process named "frontend", it restarts it.
 # Otherwise, it starts the Next.js process and names it "frontend".
-sudo pm2 restart frontend || sudo pm2 start npm --name "frontend" -- start
+sudo pm2 restart frontend --update-env || sudo pm2 start npm --name "frontend" --update-env -- start
 
 # ================= PM2 STARTUP =================
 echo "Configuring PM2 to start on system boot..."
