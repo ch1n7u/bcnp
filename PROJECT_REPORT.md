@@ -32,7 +32,7 @@ Table of Contents
 - Cyber Crime Reporting Portal (prototype)
 
 ### Problem statement
-- Citizens currently lack a secure, standardized, and trackable way to report cybercrimes. Traditional phone/paper channels are slow, inconsistent and provide weak evidence handling and audit trails.
+While India maintains official reporting channels such as the National Cyber Crime Reporting Portal, practical gaps persist in day‑to‑day use that affect both citizens and investigative teams. Non‑technical users frequently encounter procedural complexity and uncertainty when filing complaints or submitting digital evidence; reporters receive limited visibility and structured feedback about case progress; and evidence ingestion workflows often lack consistent metadata, secure handling, and verifiable audit trails. At the same time, investigators and administrators face communication inefficiencies, inconsistent case triage, and limited tooling for structured case management and workload assignment. This project presents an academic prototype that aims to address these operational gaps by improving usability, secure evidence submission, complaint categorization and tracking, role‑based administrative workflows, audit logging and abuse protections — providing a technically realistic, privacy‑aware complement to existing national reporting infrastructure and a foundation for further operational integration and research.
 
 ### Real-world problem solved
 - Provides standardized complaint intake, secure evidence submission, structured investigator workflows, and auditable metadata suitable for triage and preliminary forensic needs.
