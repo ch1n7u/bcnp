@@ -94,16 +94,7 @@ sudo npm audit fix
 echo "Restarting backend process..."
 # If PM2 is already managing a process named "backend", it restarts it.
 # Otherwise, it starts the process and names it "backend".
-sourced_backend_env=false
-if [ -f .env ]; then
-    echo "Loading backend/.env into environment..."
-    set -a
-    # shellcheck disable=SC1090
-    . .env
-    set +a
-    sourced_backend_env=true
-fi
-sudo pm2 restart backend --update-env || sudo pm2 start src/server.js --name "backend" --update-env
+sudo pm2 restart backend || sudo pm2 start src/server.js --name "backend"
 
 # Go back to root
 cd ..
@@ -117,20 +108,14 @@ sudo npm install
 sudo npm audit fix
 
 echo "Building frontend..."
-if [ -f .env.local ]; then
-    echo "Loading frontend/.env.local into environment for build/runtime..."
-    set -a
-    # shellcheck disable=SC1090
-    . .env.local
-    set +a
-fi
+# Next.js loads .env.local automatically during build.
 sudo rm -rf .next/cache
 sudo npm run build
 
 echo "Restarting frontend process..."
 # If PM2 is already managing a process named "frontend", it restarts it.
 # Otherwise, it starts the Next.js process and names it "frontend".
-sudo pm2 restart frontend --update-env || sudo pm2 start npm --name "frontend" --update-env -- start
+sudo pm2 restart frontend || sudo pm2 start npm --name "frontend" -- start
 
 # ================= PM2 STARTUP =================
 echo "Configuring PM2 to start on system boot..."
