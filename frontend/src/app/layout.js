@@ -4,6 +4,7 @@ import Footer from "../components/Footer";
 import { AuthProvider } from "../context/AuthContext";
 
 export const metadata = {
+  metadataBase: new URL("https://bharatcybernyayportal.online"),
   title: "Bharat Cyber Nyay Portal",
   description:
     "A secure digital platform empowering citizens to report cybercrime incidents, track case progress, and seek timely assistance",
@@ -14,6 +15,29 @@ export const metadata = {
     ],
     shortcut: "/favicon.ico?v=2",
     apple: "/logo.svg?v=2"
+  },
+  openGraph: {
+    title: "Bharat Cyber Nyay Portal",
+    description:
+      "A secure digital platform empowering citizens to report cybercrime incidents, track case progress, and seek timely assistance",
+    url: "https://bharatcybernyayportal.online",
+    siteName: "Bharat Cyber Nyay Portal",
+    type: "website",
+    images: [
+      {
+        url: "/opengraph-image.png?v=1",
+        width: 1200,
+        height: 630,
+        alt: "Bharat Cyber Nyay Portal"
+      }
+    ]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Bharat Cyber Nyay Portal",
+    description:
+      "A secure digital platform empowering citizens to report cybercrime incidents, track case progress, and seek timely assistance",
+    images: ["/opengraph-image.png?v=1"]
   }
 };
 
