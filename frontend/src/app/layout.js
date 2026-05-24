@@ -5,8 +5,12 @@ import { AuthProvider } from "../context/AuthContext";
 
 export const metadata = {
   title: "Bharat Cyber Nyay Portal",
-  description: "A secure digital platform empowering citizens to report cybercrime incidents, track case progress, and seek timely assistance",  icons: {
-    icon: "/logo.svg"
+  description:
+    "A secure digital platform empowering citizens to report cybercrime incidents, track case progress, and seek timely assistance",
+  icons: {
+    icon: [{ url: "/logo.svg", type: "image/svg+xml" }],
+    shortcut: "/logo.svg",
+    apple: "/logo.svg"
   }
 };
 
