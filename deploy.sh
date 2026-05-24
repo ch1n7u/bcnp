@@ -94,6 +94,15 @@ sudo npm audit fix
 echo "Restarting backend process..."
 # If PM2 is already managing a process named "backend", it restarts it.
 # Otherwise, it starts the process and names it "backend".
+sourced_backend_env=false
+if [ -f .env ]; then
+    echo "Loading backend/.env into environment..."
+    set -a
+    # shellcheck disable=SC1090
+    . .env
+    set +a
+    sourced_backend_env=true
+fi
 sudo pm2 restart backend --update-env || sudo pm2 start src/server.js --name "backend" --update-env
 
 # Go back to root
@@ -108,6 +117,13 @@ sudo npm install
 sudo npm audit fix
 
 echo "Building frontend..."
+if [ -f .env.local ]; then
+    echo "Loading frontend/.env.local into environment for build/runtime..."
+    set -a
+    # shellcheck disable=SC1090
+    . .env.local
+    set +a
+fi
 sudo rm -rf .next/cache
 sudo npm run build
 
