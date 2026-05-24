@@ -6,7 +6,15 @@ import { AuthProvider } from "../context/AuthContext";
 export const metadata = {
   title: "Bharat Cyber Nyay Portal",
   description:
-    "A secure digital platform empowering citizens to report cybercrime incidents, track case progress, and seek timely assistance"
+    "A secure digital platform empowering citizens to report cybercrime incidents, track case progress, and seek timely assistance",
+  icons: {
+    icon: [
+      { url: "/favicon.ico?v=2" },
+      { url: "/logo.svg?v=2", type: "image/svg+xml", sizes: "any" }
+    ],
+    shortcut: "/favicon.ico?v=2",
+    apple: "/logo.svg?v=2"
+  }
 };
 
 export const viewport = {
