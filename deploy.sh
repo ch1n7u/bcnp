@@ -31,7 +31,7 @@ echo "Configuring Nginx reverse proxy..."
 sudo tee /etc/nginx/sites-available/ccr > /dev/null <<'EOF'
 server {
     listen 80;
-    server_name _;
+    server_name bharatcybernyayportal.online www.bharatcybernyayportal.online;
 
     location /api/ {
         proxy_pass http://127.0.0.1:5000;
@@ -93,6 +93,7 @@ sudo npm install
 sudo npm audit fix
 
 echo "Building frontend..."
+sudo rm -rf .next/cache
 sudo npm run build
 
 echo "Restarting frontend process..."
