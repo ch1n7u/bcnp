@@ -21,6 +21,10 @@ sudo apt install -y nodejs npm
 echo "Installing PM2 globally..."
 sudo npm install -g pm2
 
+# Install Certbot (Let's Encrypt) for TLS certificate management
+echo "Installing Certbot and Nginx plugin..."
+sudo apt install -y certbot python3-certbot-nginx
+
 # Files are now transferred directly by GitHub Actions via SCP
 echo "Local files updated, beginning installation and restart steps..."
 
@@ -67,6 +71,17 @@ sudo nginx -t
 # Reload Nginx
 echo "Reloading Nginx..."
 sudo systemctl reload nginx
+
+# Reinstall / obtain TLS certificate for domains (non-blocking)
+echo "Ensuring TLS certificate for bharatcybernyayportal.online and www.bharatcybernyayportal.online..."
+if [ -n "$CERTBOT_EMAIL" ]; then
+    sudo certbot --nginx -d bharatcybernyayportal.online -d www.bharatcybernyayportal.online \
+        --non-interactive --agree-tos --email "$CERTBOT_EMAIL" --redirect || true
+else
+    echo "CERTBOT_EMAIL not set; running certbot without email (not recommended)"
+    sudo certbot --nginx -d bharatcybernyayportal.online -d www.bharatcybernyayportal.online \
+        --non-interactive --agree-tos --register-unsafely-without-email --redirect || true
+fi
 
 # ================= BACKEND =================
 echo "Setting up Backend..."
