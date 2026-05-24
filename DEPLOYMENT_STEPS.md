@@ -25,10 +25,10 @@ Once executed on the EC2 instance, the script performs the following sequentiall
 ### Backend Deployment Steps
 1. Changes directory to `/var/www/bcnp/backend`.
 2. Runs `sudo npm install` to install any new dependencies as the root user.
-3. Restarts the PM2 process using `sudo pm2 restart ccr-backend` (or starts it if it does not currently exist).
+3. Restarts the PM2 process using `sudo pm2 restart backend` (or starts it if it does not currently exist).
 
 ### Frontend Deployment Steps
 1. Changes directory to `/var/www/bcnp/frontend`.
 2. Runs `sudo npm install` to install new dependencies as the root user.
 3. Runs `sudo npm run build` to build the Next.js production package.
-4. Restarts the PM2 process using `sudo pm2 restart ccr-frontend` (or starts it if it does not currently exist).
+4. Restarts the PM2 process using `sudo pm2 restart frontend` (or starts it if it does not currently exist).
