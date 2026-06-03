@@ -91,10 +91,15 @@ export default function LanguageSwitcher() {
       return;
     }
 
-    setActiveLanguage("en");
-    window.localStorage.setItem(STORAGE_KEY, "en");
-    writeLanguageCookie("en");
-    clearTranslationState();
+    const savedLang = window.localStorage.getItem(STORAGE_KEY);
+    if (savedLang === "hi") {
+      setActiveLanguage("hi");
+      writeLanguageCookie("hi");
+      applyGoogleTranslate("hi");
+    } else {
+      setActiveLanguage("en");
+      writeLanguageCookie("en");
+    }
   }, []);
 
   const changeLanguage = (lang) => {
