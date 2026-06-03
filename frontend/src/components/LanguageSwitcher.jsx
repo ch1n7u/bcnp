@@ -98,6 +98,10 @@ export default function LanguageSwitcher() {
     window.localStorage.setItem(STORAGE_KEY, languageToApply);
     writeLanguageCookie(languageToApply);
 
+    if (languageToApply !== "hi") {
+      return;
+    }
+
     window.googleTranslateElementInit = () => {
       if (!window.google?.translate?.TranslateElement) {
         return;
@@ -134,14 +138,16 @@ export default function LanguageSwitcher() {
     window.localStorage.setItem(STORAGE_KEY, lang);
     writeLanguageCookie(lang);
 
+    if (lang === "en") {
+      clearTranslationState();
+      window.location.reload();
+      return;
+    }
+
     // Try to apply the language in-place using the Google widget. If that
     // fails within a short time window, fall back to a full reload.
     applyGoogleTranslate(lang).then((applied) => {
       if (applied) return;
-      // As a last resort clear any stored translator state and reload.
-      if (lang === "en") {
-        clearTranslationState();
-      }
       window.location.reload();
     });
   };
