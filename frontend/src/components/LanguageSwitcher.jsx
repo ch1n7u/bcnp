@@ -34,6 +34,15 @@ function writeLanguageCookie(lang) {
   document.cookie = "googtrans=; path=/; max-age=0";
 }
 
+function clearTranslationState() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.removeItem(STORAGE_KEY);
+  writeLanguageCookie("en");
+}
+
 export default function LanguageSwitcher() {
   const [activeLanguage, setActiveLanguage] = useState("en");
 
@@ -88,6 +97,10 @@ export default function LanguageSwitcher() {
     setActiveLanguage(lang);
     window.localStorage.setItem(STORAGE_KEY, lang);
     writeLanguageCookie(lang);
+
+    if (lang === "en") {
+      clearTranslationState();
+    }
 
     // Reload ensures Google applies translation consistently across all pages.
     window.location.reload();
