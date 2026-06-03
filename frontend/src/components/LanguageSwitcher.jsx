@@ -28,7 +28,6 @@ function clearTranslationState() {
 
 function applyGoogleTranslate(lang) {
   if (typeof window === "undefined") return;
-
   const setCombo = () => {
     const combo = document.querySelector(".goog-te-combo");
     if (!combo) return false;
@@ -41,23 +40,45 @@ function applyGoogleTranslate(lang) {
     }
   };
 
-  if (setCombo()) return Promise.resolve(true);
+  const initTranslateElement = () => {
+    if (!window.google?.translate?.TranslateElement) return false;
+    try {
+      new window.google.translate.TranslateElement(
+        {
+          pageLanguage: "en",
+          includedLanguages: "en,hi",
+          autoDisplay: false,
+          layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE
+        },
+        "google_translate_element"
+      );
+    } catch (e) {
+      // ignore
+    }
+    return setCombo();
+  };
+
+  if (initTranslateElement()) return Promise.resolve(true);
 
   return new Promise((resolve) => {
-    const tryApply = () => {
-      if (setCombo()) return resolve(true);
-      resolve(false);
+    // define the global callback the translate script expects
+    window.googleTranslateElementInit = () => {
+      const applied = initTranslateElement();
+      resolve(applied);
     };
 
-    if (!document.getElementById("google-translate-script")) {
+    const existing = document.getElementById("google-translate-script");
+    if (!existing) {
       const script = document.createElement("script");
       script.id = "google-translate-script";
       script.src = "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
       script.async = true;
-      script.onload = () => setTimeout(tryApply, 500);
+      // If the script loads but the widget isn't ready immediately, try a short delay
+      script.onload = () => setTimeout(() => resolve(initTranslateElement()), 500);
       document.body.appendChild(script);
     } else {
-      setTimeout(tryApply, 500);
+      // script already present; try to initialize after a short delay
+      setTimeout(() => resolve(initTranslateElement()), 500);
     }
   });
 }
