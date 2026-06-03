@@ -49,6 +49,9 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        <meta name="google" content="notranslate" />
+      </head>
       <body className="min-h-screen overflow-x-hidden">
         <AuthProvider>
           <div className="flex min-h-screen flex-col">
