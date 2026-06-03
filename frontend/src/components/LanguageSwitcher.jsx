@@ -43,6 +43,42 @@ function clearTranslationState() {
   writeLanguageCookie("en");
 }
 
+function applyGoogleTranslate(lang) {
+  if (typeof window === "undefined") return;
+
+  const setCombo = () => {
+    const combo = document.querySelector(".goog-te-combo");
+    if (!combo) return false;
+    try {
+      combo.value = lang === "hi" ? "hi" : "en";
+      combo.dispatchEvent(new Event("change", { bubbles: true }));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  if (setCombo()) return Promise.resolve(true);
+
+  return new Promise((resolve) => {
+    const tryApply = () => {
+      if (setCombo()) return resolve(true);
+      resolve(false);
+    };
+
+    if (!document.getElementById("google-translate-script")) {
+      const script = document.createElement("script");
+      script.id = "google-translate-script";
+      script.src = "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+      script.async = true;
+      script.onload = () => setTimeout(tryApply, 500);
+      document.body.appendChild(script);
+    } else {
+      setTimeout(tryApply, 500);
+    }
+  });
+}
+
 export default function LanguageSwitcher() {
   const [activeLanguage, setActiveLanguage] = useState("en");
 
@@ -98,12 +134,16 @@ export default function LanguageSwitcher() {
     window.localStorage.setItem(STORAGE_KEY, lang);
     writeLanguageCookie(lang);
 
-    if (lang === "en") {
-      clearTranslationState();
-    }
-
-    // Reload ensures Google applies translation consistently across all pages.
-    window.location.reload();
+    // Try to apply the language in-place using the Google widget. If that
+    // fails within a short time window, fall back to a full reload.
+    applyGoogleTranslate(lang).then((applied) => {
+      if (applied) return;
+      // As a last resort clear any stored translator state and reload.
+      if (lang === "en") {
+        clearTranslationState();
+      }
+      window.location.reload();
+    });
   };
 
   return (
