@@ -26,8 +26,12 @@ function writeLanguageCookie(lang) {
     return;
   }
 
-  const cookieValue = lang === "hi" ? "/en/hi" : "/en/en";
-  document.cookie = `googtrans=${cookieValue}; path=/; max-age=31536000`;
+  if (lang === "hi") {
+    document.cookie = "googtrans=/en/hi; path=/; max-age=31536000";
+    return;
+  }
+
+  document.cookie = "googtrans=; path=/; max-age=0";
 }
 
 export default function LanguageSwitcher() {
