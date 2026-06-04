@@ -4,12 +4,12 @@ const helmet = require("helmet");
 const hpp = require("hpp");
 const rateLimit = require("express-rate-limit");
 const cookieParser = require("cookie-parser");
+const csrf = require("csurf");
 const routes = require("./routes");
 const env = require("./config/env");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
 
 const app = express();
-app.use(cookieParser());
 app.set("trust proxy", 1);
 
 const localDevOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(:\d+)?$/;
@@ -26,6 +26,7 @@ function isAllowedOrigin(origin) {
   return env.nodeEnv !== "production" && localDevOriginPattern.test(origin);
 }
 
+// 1. Helmet & CORS middleware (MUST be first so error responses also get CORS headers)
 app.use(helmet());
 app.use(
   cors({
@@ -39,6 +40,30 @@ app.use(
     credentials: true
   })
 );
+
+// 2. Cookie parser (needed for CSRF cookie parsing)
+app.use(cookieParser());
+
+// Temporary debug logger for CSRF cookies and headers
+app.use((req, res, next) => {
+  if (req.url.includes("/api/")) {
+    console.log(`[CSRF Debug] Method: ${req.method} | URL: ${req.url}`);
+    console.log(`[CSRF Debug] Cookies:`, req.cookies);
+    console.log(`[CSRF Debug] Header:`, req.headers["x-csrf-token"]);
+  }
+  next();
+});
+
+// 3. CSRF Protection (registered after CORS and cookies)
+const csrfProtection = csrf({
+  cookie: {
+    key: "_csrf",
+    httpOnly: true,
+    secure: env.nodeEnv === "production",
+    sameSite: "lax"
+  }
+});
+app.use(csrfProtection);
 app.use(express.json({ limit: "5mb" }));
 app.use(hpp());
 app.use(
@@ -52,6 +77,10 @@ app.use(
 
 app.get("/health", (req, res) => {
   res.json({ status: "ok", service: "cyber-crime-reporting-api" });
+});
+
+app.get("/api/csrf-token", (req, res) => {
+  res.json({ csrfToken: req.csrfToken() });
 });
 
 app.use("/api", routes);
