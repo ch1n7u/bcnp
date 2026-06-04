@@ -38,15 +38,11 @@ api.interceptors.request.use(
     if (["post", "put", "patch", "delete"].includes(method)) {
       try {
         const csrfToken = await getCsrfToken();
-        console.log("[Client CSRF Debug] Token fetched:", csrfToken);
         if (csrfToken) {
           config.headers.set("X-CSRF-Token", csrfToken);
-          console.log("[Client CSRF Debug] Attached headers:", config.headers);
-        } else {
-          console.warn("[Client CSRF Debug] No token fetched!");
         }
-      } catch (err) {
-        console.error("CSRF Token retrieval failed:", err);
+      } catch (_err) {
+        // Fail silently without exposing details in client console logs
       }
     }
     return config;
@@ -59,6 +55,11 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Expose correlation ID from backend to the client error object for UI tracing
+    if (error.response?.data?.correlationId) {
+      error.correlationId = error.response.data.correlationId;
+    }
+
     // If we receive a 403 Forbidden with a message indicating invalid CSRF token, reset cache so we refetch
     if (
       error.response &&

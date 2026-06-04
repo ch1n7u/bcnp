@@ -8,6 +8,8 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+const logger = require("./logger");
+
 async function sendOtpEmail(toEmail, otpCode) {
   const mailOptions = {
     from: `"Bharat Cyber Nyay Portal" <${process.env.SMTP_USER}>`,
@@ -37,9 +39,9 @@ async function sendOtpEmail(toEmail, otpCode) {
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log(`OTP sent to ${toEmail}`);
+    logger.info("OTP sent to email successfully", { email: toEmail });
   } catch (error) {
-    console.error("Error sending OTP email:", error);
+    logger.error("Error sending OTP email", error, { email: toEmail });
     throw new Error("Failed to send OTP email. Please check your SMTP configuration.");
   }
 }
