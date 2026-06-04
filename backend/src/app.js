@@ -44,16 +44,6 @@ app.use(
 // 2. Cookie parser (needed for CSRF cookie parsing)
 app.use(cookieParser());
 
-// Temporary debug logger for CSRF cookies and headers
-app.use((req, res, next) => {
-  if (req.url.includes("/api/")) {
-    console.log(`[CSRF Debug] Method: ${req.method} | URL: ${req.url}`);
-    console.log(`[CSRF Debug] Cookies:`, req.cookies);
-    console.log(`[CSRF Debug] Header:`, req.headers["x-csrf-token"]);
-  }
-  next();
-});
-
 // 3. CSRF Protection (registered after CORS and cookies)
 const csrfProtection = csrf({
   cookie: {

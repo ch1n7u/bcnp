@@ -89,7 +89,6 @@ cd backend
 
 echo "Installing backend dependencies..."
 sudo npm install
-sudo npm audit fix
 
 echo "Restarting backend process..."
 # If PM2 is already managing a process named "backend", it restarts it.
@@ -105,7 +104,6 @@ cd frontend
 
 echo "Installing frontend dependencies..."
 sudo npm install
-sudo npm audit fix
 
 echo "Building frontend..."
 # Next.js loads .env.local automatically during build.
