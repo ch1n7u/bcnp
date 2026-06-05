@@ -1,5 +1,7 @@
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
+const { OAuth2Client } = require("google-auth-library");
+const env = require("../config/env");
 const { signAccessToken } = require("../utils/jwt");
 const { supabaseAdmin } = require("../config/db");
 const { findByEmail, findById, createUser } = require("../models/userModel");
@@ -182,7 +184,7 @@ async function forgotPasswordSendOtp(req, res, next) {
       otpCode
     }, 300); // 5 min TTL
 
-    await sendOtpEmail(email, otpCode);
+    await sendOtpEmail(email, otpCode, "reset");
 
     rateData.count += 1;
     let waitLimit = 30;
@@ -377,6 +379,78 @@ async function logout(req, res, next) {
   return res.json({ message: "Logged out successfully" });
 }
 
+async function googleLogin(req, res, next) {
+  try {
+    const { credential, mode } = req.body;
+    if (!credential) {
+      return res.status(400).json({ message: "Google credential is required" });
+    }
+
+    if (!env.googleClientId) {
+      return res.status(500).json({ message: "Google Client ID is not configured on the server" });
+    }
+
+    const client = new OAuth2Client(env.googleClientId);
+    
+    let payload;
+    try {
+      const ticket = await client.verifyIdToken({
+        idToken: credential,
+        audience: env.googleClientId,
+      });
+      payload = ticket.getPayload();
+    } catch (err) {
+      return res.status(401).json({ message: "Invalid Google credential" });
+    }
+
+    const { email, name } = payload;
+    if (!email) {
+      return res.status(400).json({ message: "Email not provided by Google account" });
+    }
+
+    // Check if user exists
+    let user = await findByEmail(email);
+    
+    if (!user) {
+      if (mode === "login") {
+        return res.status(404).json({ message: "No account found with this Google email. Please register first." });
+      }
+
+      // Create user
+      const secureRandomPassword = crypto.randomBytes(32).toString("hex");
+      const passwordHash = await bcrypt.hash(secureRandomPassword, 12);
+      
+      user = await createUser({
+        name: name || email.split("@")[0],
+        email: email,
+        passwordHash: passwordHash,
+        role: "citizen"
+      });
+    }
+
+    const token = signAccessToken(user);
+
+    res.cookie("ccrp_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    return res.json({
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      },
+      token
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   sendOtp,
   verifyOtp,
@@ -386,5 +460,6 @@ module.exports = {
   resetPassword,
   login,
   me,
-  logout
+  logout,
+  googleLogin
 };

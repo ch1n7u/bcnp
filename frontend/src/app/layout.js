@@ -1,4 +1,5 @@
 import "./globals.css";
+import Script from "next/script";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { AuthProvider } from "../context/AuthContext";
@@ -57,6 +58,7 @@ export default function RootLayout({ children }) {
             <Footer />
           </div>
         </AuthProvider>
+        <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
       </body>
     </html>
   );

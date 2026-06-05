@@ -6,8 +6,8 @@ export default function Footer() {
 
   return (
     <footer className="mt-8 border-t border-ocean/20 bg-ocean/10 backdrop-blur md:mt-10">
-      <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-8 sm:px-6 md:grid-cols-3 lg:px-8">
-        <div className="text-center md:text-left">
+      <div className="mx-auto flex flex-col items-center justify-center gap-10 px-4 py-8 sm:px-6 md:flex-row md:items-start md:justify-center md:gap-16 lg:gap-28 lg:px-8">
+        <div className="max-w-[280px] text-center md:text-left">
           <div className="flex items-center justify-center gap-2 md:justify-start">
             <Image src="/logo.svg" alt="Bharat Cyber Nyay Portal logo" width={30} height={30} />
             <h2 className="font-display text-lg font-bold text-ocean">
@@ -46,7 +46,6 @@ export default function Footer() {
           <p className="font-display text-3xl font-bold text-coral">1930</p>
         </div>
       </div>
-
       <div className="border-t border-ocean/20 px-4 py-3 text-center text-xs leading-relaxed text-slate-600 sm:px-6 lg:px-8">
         <p className="mx-auto max-w-4xl">
           <span className="notranslate" translate="no">Bharat Cyber Nyay Portal</span> © {currentYear}. For official cybercrime complaints in India, please visit{" "}

@@ -8,11 +8,19 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-async function sendOtpEmail(toEmail, otpCode) {
+async function sendOtpEmail(toEmail, otpCode, type = "registration") {
+  const isReset = type === "reset" || type === "password_reset";
+  const subject = isReset
+    ? "Your Password Reset OTP - Bharat Cyber Nyay Portal"
+    : "Your Registration OTP - Bharat Cyber Nyay Portal";
+  const bodyText = isReset
+    ? "Please use the following One Time Password (OTP) to reset your password. This code will expire in 5 minutes."
+    : "Please use the following One Time Password (OTP) to complete your registration. This code will expire in 5 minutes.";
+
   const mailOptions = {
     from: `"Bharat Cyber Nyay Portal" <${process.env.SMTP_USER}>`,
     to: toEmail,
-    subject: "Your Registration OTP - Bharat Cyber Nyay Portal",
+    subject: subject,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
         <div style="background-color: #0c4a6e; padding: 20px; text-align: center;">
@@ -20,7 +28,7 @@ async function sendOtpEmail(toEmail, otpCode) {
         </div>
         <div style="padding: 20px; background-color: #ffffff;">
           <p style="font-size: 16px; color: #334155;">Hello,</p>
-          <p style="font-size: 16px; color: #334155;">Please use the following One Time Password (OTP) to complete your registration. This code will expire in 5 minutes.</p>
+          <p style="font-size: 16px; color: #334155;">${bodyText}</p>
           <div style="text-align: center; margin: 30px 0;">
             <span style="display: inline-block; padding: 15px 30px; font-size: 24px; font-weight: bold; background-color: #f1f5f9; color: #0284c7; border-radius: 8px; letter-spacing: 4px;">
               ${otpCode}

@@ -133,6 +133,82 @@ export default function AuthForm({ mode = "login" }) {
     };
   }, [showForgotModal]);
 
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+  const handleGoogleCredentialResponse = async (response) => {
+    setLoading(true);
+    setError("");
+    setSuccess("");
+    try {
+      const { data } = await api.post("/auth/google", { 
+        credential: response.credential,
+        mode: mode
+      });
+
+      if (!data?.user) {
+        throw new Error("Invalid authentication response from server");
+      }
+
+      login({ user: data.user });
+      setSuccess("Login successful. Redirecting...");
+
+      const destination =
+        data.user?.role === "admin"
+          ? "/dashboard/admin"
+          : data.user?.role === "investigator"
+            ? "/dashboard"
+            : "/";
+      router.replace(destination);
+
+      setTimeout(() => {
+        if (typeof window !== "undefined" && window.location.pathname !== destination) {
+          window.location.href = destination;
+        }
+      }, 500);
+    } catch (err) {
+      setError(err?.response?.data?.message || err?.message || "Google Authentication failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !googleClientId) return;
+
+    const initializeGoogleSignIn = () => {
+      if (!window.google?.accounts?.id) return;
+
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: handleGoogleCredentialResponse,
+      });
+
+      window.google.accounts.id.renderButton(
+        document.getElementById("google-signin-btn"),
+        { 
+          theme: "outline", 
+          size: "large", 
+          shape: "pill",
+          logo_alignment: "center",
+          width: "100%", 
+          text: isRegister ? "signup_with" : "signin_with" 
+        }
+      );
+    };
+
+    if (window.google?.accounts?.id) {
+      initializeGoogleSignIn();
+    } else {
+      const interval = setInterval(() => {
+        if (window.google?.accounts?.id) {
+          initializeGoogleSignIn();
+          clearInterval(interval);
+        }
+      }, 500);
+      return () => clearInterval(interval);
+    }
+  }, [isRegister, googleClientId]);
+
   useEffect(() => {
     if (isAuthenticated && user) {
       const dest =
@@ -621,6 +697,18 @@ export default function AuthForm({ mode = "login" }) {
         {loading ? "Please wait..." : isRegister ? "Register" : "Login"}
       </button>
 
+      {googleClientId && (
+        <>
+          <div className="relative my-6 flex items-center justify-center">
+            <hr className="w-full border-slate-200" />
+            <span className="absolute bg-[#f9f6f0] px-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Or</span>
+          </div>
+          <div className="flex justify-center">
+            <div id="google-signin-btn" className="w-full max-w-[400px]"></div>
+          </div>
+        </>
+      )}
+
       {!isRegister && (
         <div className="mt-4 text-center">
           <button
@@ -748,7 +836,7 @@ export default function AuthForm({ mode = "login" }) {
                   </div>
                 ) : (
                   <div className="text-center text-xs font-bold text-red-600 bg-red-100 px-3 py-1 mx-auto rounded-full">
-                    OTP Expired \u2014 please resend
+                    OTP Expired — please resend
                   </div>
                 )}
                 <input

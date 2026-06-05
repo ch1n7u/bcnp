@@ -27,5 +27,6 @@ module.exports = {
   predefinedInvestigatorName: process.env.PREDEFINED_INVESTIGATOR_NAME,
   supabaseUrl: process.env.SUPABASE_URL,
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-  supabaseStorageBucket: process.env.SUPABASE_STORAGE_BUCKET || "evidence-files"
+  supabaseStorageBucket: process.env.SUPABASE_STORAGE_BUCKET || "evidence-files",
+  googleClientId: process.env.GOOGLE_CLIENT_ID
 };
