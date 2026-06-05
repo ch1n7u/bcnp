@@ -18,3 +18,8 @@ logs
 # OS
 .DS_Store
 Thumbs.db
+
+# Docs & Reports
+docs/
+report/
+generate_report.py

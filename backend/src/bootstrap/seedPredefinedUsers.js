@@ -1,4 +1,5 @@
 const bcrypt = require("bcryptjs");
+const logger = require("../utils/logger");
 const env = require("../config/env");
 const { findByEmail, createUser } = require("../models/userModel");
 
@@ -18,7 +19,7 @@ async function seedPredefinedUsers() {
         passwordHash,
         role: "admin"
       });
-      console.log("Predefined admin account created.");
+      logger.info("Predefined admin account created.");
     }
   }
 
@@ -38,7 +39,7 @@ async function seedPredefinedUsers() {
         passwordHash,
         role: "investigator"
       });
-      console.log("Predefined investigator account created.");
+      logger.info("Predefined investigator account created.");
     }
   }
 }

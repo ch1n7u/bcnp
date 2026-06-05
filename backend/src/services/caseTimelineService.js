@@ -1,4 +1,5 @@
 const { supabaseAdmin } = require("../config/db");
+const logger = require("../utils/logger");
 
 function getClientIpAddress(req) {
   if (!req) return null;
@@ -28,7 +29,7 @@ async function logCaseEvent({ reportId, actionType, actorId = null, actorRole = 
 
   if (error) {
     // Timeline writes should never block core case operations.
-    console.error("case_timeline write failed", error.message);
+    logger.error("case_timeline write failed", error, { reportId, actionType }, req ? req.correlationId : null);
     return null;
   }
 

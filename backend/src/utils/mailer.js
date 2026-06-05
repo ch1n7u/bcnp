@@ -8,6 +8,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+<<<<<<< HEAD
 async function sendOtpEmail(toEmail, otpCode, type = "registration") {
   const isReset = type === "reset" || type === "password_reset";
   const subject = isReset
@@ -17,6 +18,11 @@ async function sendOtpEmail(toEmail, otpCode, type = "registration") {
     ? "Please use the following One Time Password (OTP) to reset your password. This code will expire in 5 minutes."
     : "Please use the following One Time Password (OTP) to complete your registration. This code will expire in 5 minutes.";
 
+=======
+const logger = require("./logger");
+
+async function sendOtpEmail(toEmail, otpCode) {
+>>>>>>> 9e53da51488156d4eb04f00c4a243c9b38a31c4e
   const mailOptions = {
     from: `"Bharat Cyber Nyay Portal" <${process.env.SMTP_USER}>`,
     to: toEmail,
@@ -45,9 +51,9 @@ async function sendOtpEmail(toEmail, otpCode, type = "registration") {
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log(`OTP sent to ${toEmail}`);
+    logger.info("OTP sent to email successfully", { email: toEmail });
   } catch (error) {
-    console.error("Error sending OTP email:", error);
+    logger.error("Error sending OTP email", error, { email: toEmail });
     throw new Error("Failed to send OTP email. Please check your SMTP configuration.");
   }
 }

@@ -12,14 +12,26 @@ const loginRateLimiter = rateLimit({
 	max: 10,
 	standardHeaders: true,
 	legacyHeaders: false,
-	message: { message: "Too many login attempts. Please try again later." }
+	handler: (req, res) => {
+		res.status(429).json({
+			status: "error",
+			message: "Unable to process your request.",
+			correlationId: req.correlationId
+		});
+	}
 });
 const registerRateLimiter = rateLimit({
 	windowMs: 15 * 60 * 1000,
 	max: 10,
 	standardHeaders: true,
 	legacyHeaders: false,
-	message: { message: "Too many registration attempts. Please try again later." }
+	handler: (req, res) => {
+		res.status(429).json({
+			status: "error",
+			message: "Unable to process your request.",
+			correlationId: req.correlationId
+		});
+	}
 });
 
 
