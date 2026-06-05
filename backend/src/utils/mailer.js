@@ -8,7 +8,8 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-<<<<<<< HEAD
+const logger = require("./logger");
+
 async function sendOtpEmail(toEmail, otpCode, type = "registration") {
   const isReset = type === "reset" || type === "password_reset";
   const subject = isReset
@@ -17,12 +18,6 @@ async function sendOtpEmail(toEmail, otpCode, type = "registration") {
   const bodyText = isReset
     ? "Please use the following One Time Password (OTP) to reset your password. This code will expire in 5 minutes."
     : "Please use the following One Time Password (OTP) to complete your registration. This code will expire in 5 minutes.";
-
-=======
-const logger = require("./logger");
-
-async function sendOtpEmail(toEmail, otpCode) {
->>>>>>> 9e53da51488156d4eb04f00c4a243c9b38a31c4e
   const mailOptions = {
     from: `"Bharat Cyber Nyay Portal" <${process.env.SMTP_USER}>`,
     to: toEmail,
