@@ -704,7 +704,7 @@ export default function AuthForm({ mode = "login" }) {
             <span className="absolute bg-[#f9f6f0] px-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Or</span>
           </div>
           <div className="flex justify-center">
-            <div id="google-signin-btn" className="w-full max-w-[400px]"></div>
+            <div id="google-signin-btn" className="flex justify-center w-full max-w-[400px]"></div>
           </div>
         </>
       )}
