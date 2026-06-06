@@ -461,7 +461,7 @@ export default function AdminCaseAssignment() {
                 {reports.map((report) => (
                   <tr key={report.report_id} className="border-t align-top">
                     <td className="p-2 font-semibold">#{report.report_id}</td>
-                    <td className="p-2">{report.citizen_name || "Anonymous"}</td>
+                    <td className="p-2">{report.victim_name || report.citizen_name || "Anonymous"}</td>
                     <td className="p-2">
                       <div className="font-medium">{report.crime_type}</div>
                       <div className="text-xs text-slate-400">{report.location}</div>

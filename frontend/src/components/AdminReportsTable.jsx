@@ -45,7 +45,7 @@ export default function AdminReportsTable({ reports = [], loading = false }) {
               {reports.map((report) => (
                 <tr key={report.report_id} className="border-t">
                   <td className="p-2 font-semibold">#{report.report_id}</td>
-                  <td className="p-2">{report.citizen_name || "Anonymous"}</td>
+                  <td className="p-2">{report.victim_name || report.citizen_name || "Anonymous"}</td>
                   <td className="p-2">{report.crime_type || "-"}</td>
                   <td className="p-2">
                     <span
