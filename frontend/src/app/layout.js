@@ -3,6 +3,7 @@ import Script from "next/script";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { AuthProvider } from "../context/AuthContext";
+import DisclaimerOverlay from "../components/DisclaimerOverlay";
 
 export const metadata = {
   metadataBase: new URL("https://bharatcybernyayportal.online"),
@@ -53,6 +54,7 @@ export default function RootLayout({ children }) {
       <head>
       </head>
       <body className="min-h-screen overflow-x-hidden">
+        <DisclaimerOverlay />
         <AuthProvider>
           <div className="flex min-h-screen flex-col">
             <Navbar />
