@@ -170,16 +170,18 @@ export default function ProfileSummary() {
         </div>
 
         {/* Reset Password Button */}
-        <div className="mt-6 border-t border-slate-200 pt-5">
-          <button
-            type="button"
-            onClick={openResetModal}
-            className="inline-flex items-center gap-2 rounded-xl bg-ocean/10 px-5 py-2.5 text-sm font-bold text-ocean border border-ocean/20 hover:bg-ocean hover:text-white transition-all"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
-            Reset Password
-          </button>
-        </div>
+        {user?.provider !== "google" && (
+          <div className="mt-6 border-t border-slate-200 pt-5">
+            <button
+              type="button"
+              onClick={openResetModal}
+              className="inline-flex items-center gap-2 rounded-xl bg-ocean/10 px-5 py-2.5 text-sm font-bold text-ocean border border-ocean/20 hover:bg-ocean hover:text-white transition-all"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
+              Reset Password
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="glass rounded-2xl p-6 shadow-md">

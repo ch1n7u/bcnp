@@ -5,7 +5,8 @@ function signAccessToken(user) {
   const payload = {
     user_id: user.id,
     email: user.email,
-    role: user.role
+    role: user.role,
+    provider: user.provider || "local"
   };
 
   return jwt.sign(payload, env.jwtSecret, {

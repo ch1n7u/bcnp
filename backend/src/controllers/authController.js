@@ -202,6 +202,15 @@ async function forgotPasswordSendOtp(req, res, next) {
       });
     }
 
+    if (user.auth_provider === "google") {
+      logger.warn(`SECURITY_AUDIT: Password reset requested for Google auth user: ${maskEmail(email)}`, {}, correlationId);
+      return res.status(400).json({
+        status: "error",
+        message: "This account uses Google Sign-In. Password reset is not available.",
+        correlationId
+      });
+    }
+
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
     const resetKey = `reset_${email}`;
@@ -385,6 +394,9 @@ async function login(req, res, next) {
 async function me(req, res, next) {
   try {
     const user = await findById(req.user.id);
+    if (user) {
+      user.provider = req.user.provider || "local";
+    }
     const correlationId = req.correlationId;
     if (!user) {
       logger.warn(`SECURITY_AUDIT: Current user fetch failed (user not found) for id: ${req.user.id}`, {}, correlationId);
@@ -507,10 +519,12 @@ async function googleLogin(req, res, next) {
         name: name || email.split("@")[0],
         email: email,
         passwordHash: passwordHash,
-        role: "citizen"
+        role: "citizen",
+        authProvider: "google"
       });
     }
 
+    user.provider = "google";
     const token = signAccessToken(user);
 
     res.cookie("ccrp_token", token, {
@@ -525,7 +539,8 @@ async function googleLogin(req, res, next) {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        provider: "google"
       },
       token
     });
