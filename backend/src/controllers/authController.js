@@ -6,7 +6,7 @@ const { signAccessToken } = require("../utils/jwt");
 const { supabaseAdmin } = require("../config/db");
 const { findByEmail, findById, createUser } = require("../models/userModel");
 const { otpStore, rateLimitStore } = require("../utils/store");
-const { sendOtpEmail } = require("../utils/mailer");
+const { sendOtpEmail, sendWelcomeEmail, sendLoginAlertEmail } = require("../utils/mailer");
 const logger = require("../utils/logger");
 
 function maskEmail(email) {
@@ -149,6 +149,9 @@ async function registerFinal(req, res, next) {
     });
 
     otpStore.delete(email);
+
+    // Send welcome email asynchronously (don't await to not block the response)
+    sendWelcomeEmail(user.email, user.name);
 
     logger.info(`SECURITY_AUDIT: User registration completed successfully for email: ${maskEmail(email)}`, {}, correlationId);
 
@@ -376,6 +379,11 @@ async function login(req, res, next) {
 
     logger.info(`SECURITY_AUDIT: User login successful for email: ${maskEmail(email)}`, {}, correlationId);
 
+    // Send login alert asynchronously
+    if (user.role === "citizen") {
+      sendLoginAlertEmail(user.email, user.name);
+    }
+
     return res.json({
       status: "success",
       user: {
@@ -522,6 +530,9 @@ async function googleLogin(req, res, next) {
         role: "citizen",
         authProvider: "google"
       });
+      
+      // Send welcome email to new Google registrants
+      sendWelcomeEmail(user.email, user.name);
     }
 
     user.provider = "google";
@@ -533,6 +544,11 @@ async function googleLogin(req, res, next) {
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
+
+    // Send login alert asynchronously
+    if (user.role === "citizen") {
+      sendLoginAlertEmail(user.email, user.name);
+    }
 
     return res.json({
       user: {
