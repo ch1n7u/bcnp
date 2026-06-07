@@ -10,6 +10,16 @@ const statusBadge = {
   Closed: "bg-slate-100 text-slate-600"
 };
 
+const crimeTypesMap = {
+  "Phishing": "Phishing Scam",
+  "Online fraud": "Online Fraud",
+  "UPI scams": "UPI Scam",
+  "Social media harassment": "Social Media Harassment",
+  "Identity theft": "Identity Theft",
+  "Cryptocurrency scams": "Cryptocurrency Scam",
+  "Fake websites": "Fake Website Scam"
+};
+
 export default function AdminReportsTable({ reports = [], loading = false }) {
   return (
     <section className="glass rounded-2xl p-6">
@@ -46,7 +56,7 @@ export default function AdminReportsTable({ reports = [], loading = false }) {
                 <tr key={report.report_id} className="border-t">
                   <td className="p-2 font-semibold">#{report.report_id}</td>
                   <td className="p-2">{report.victim_name || report.citizen_name || "Anonymous"}</td>
-                  <td className="p-2">{report.crime_type || "-"}</td>
+                  <td className="p-2">{crimeTypesMap[report.crime_type] || report.crime_type || "-"}</td>
                   <td className="p-2">
                     <span
                       className={`rounded-full px-2 py-1 text-xs font-semibold ${

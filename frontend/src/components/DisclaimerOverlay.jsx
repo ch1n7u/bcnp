@@ -39,7 +39,7 @@ export default function DisclaimerOverlay() {
       }`}
     >
       <div 
-        className={`w-full max-w-md transform rounded-3xl bg-white p-8 text-center shadow-[0_0_50px_rgba(239,68,68,0.4)] transition-all duration-300 ${
+        className={`w-full max-w-md transform rounded-3xl bg-white p-8 text-center shadow-[0_0_50px_rgba(239,68,68,0.55)] transition-all duration-300 ${
           isClosing ? "scale-95 opacity-0" : "scale-100 opacity-100"
         }`}
       >
@@ -60,7 +60,7 @@ export default function DisclaimerOverlay() {
           <p>
             This is an independent portal made purely as a university academic project. It is <strong>not</strong> affiliated with the Government of India.
           </p>
-          <p className="rounded-xl bg-slate-100 p-4 text-sm">
+          <p className="rounded-xl bg-slate-200 p-4 text-sm text-slate-700 font-medium">
             For reporting any official Cyber Crime, please visit the official government website at: <br />
             <a 
               href="https://cybercrime.gov.in" 
@@ -76,7 +76,7 @@ export default function DisclaimerOverlay() {
         {/* Acknowledge Button */}
         <button
           onClick={handleAcknowledge}
-          className="w-full rounded-2xl bg-[#507d77] px-4 py-3.5 text-base font-bold text-white shadow-md transition-colors hover:bg-[#3e6661] focus:outline-none focus:ring-2 focus:ring-[#507d77] focus:ring-offset-2"
+          className="w-full rounded-2xl bg-[#315752] px-4 py-3.5 text-base font-bold text-white shadow-lg transition-all hover:bg-[#23423e] hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-[#315752] focus:ring-offset-2"
         >
           I Acknowledge
         </button>

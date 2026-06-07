@@ -15,6 +15,16 @@ const statusBadge = {
   Closed: "bg-slate-100 text-slate-600"
 };
 
+const crimeTypesMap = {
+  "Phishing": "Phishing Scam",
+  "Online fraud": "Online Fraud",
+  "UPI scams": "UPI Scam",
+  "Social media harassment": "Social Media Harassment",
+  "Identity theft": "Identity Theft",
+  "Cryptocurrency scams": "Cryptocurrency Scam",
+  "Fake websites": "Fake Website Scam"
+};
+
 const timelineActionLabel = {
   CASE_CREATED: "Case created",
   INVESTIGATOR_ASSIGNED: "Investigator assigned",
@@ -463,7 +473,7 @@ export default function AdminCaseAssignment() {
                     <td className="p-2 font-semibold">#{report.report_id}</td>
                     <td className="p-2">{report.victim_name || report.citizen_name || "Anonymous"}</td>
                     <td className="p-2">
-                      <div className="font-medium">{report.crime_type}</div>
+                      <div className="font-medium">{crimeTypesMap[report.crime_type] || report.crime_type}</div>
                       <div className="text-xs text-slate-400">{report.location}</div>
                     </td>
                     <td className="p-2">

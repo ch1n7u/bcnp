@@ -6,6 +6,7 @@ import { FaAmazonPay, FaChevronDown, FaMoneyCheckDollar } from "react-icons/fa6"
 import { SiPaytm, SiPhonepe } from "react-icons/si";
 import api from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+import { defaultStates, defaultCitiesByState } from "../lib/locations";
 
 const crimeTypes = [
   { value: "Phishing", label: "Phishing Scam" },
@@ -17,85 +18,7 @@ const crimeTypes = [
   { value: "Fake websites", label: "Fake Website Scam" }
 ];
 
-const defaultStates = [
-  "Andhra Pradesh",
-  "Arunachal Pradesh",
-  "Assam",
-  "Bihar",
-  "Chhattisgarh",
-  "Goa",
-  "Gujarat",
-  "Haryana",
-  "Himachal Pradesh",
-  "Jharkhand",
-  "Karnataka",
-  "Kerala",
-  "Madhya Pradesh",
-  "Maharashtra",
-  "Manipur",
-  "Meghalaya",
-  "Mizoram",
-  "Nagaland",
-  "Odisha",
-  "Punjab",
-  "Rajasthan",
-  "Sikkim",
-  "Tamil Nadu",
-  "Telangana",
-  "Tripura",
-  "Uttar Pradesh",
-  "Uttarakhand",
-  "West Bengal",
-  "Andaman and Nicobar Islands",
-  "Chandigarh",
-  "Dadra and Nagar Haveli and Daman and Diu",
-  "Delhi",
-  "Jammu and Kashmir",
-  "Ladakh",
-  "Lakshadweep",
-  "Puducherry",
-  "Outside India"
-];
 
-const defaultCitiesByState = {
-  "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Tirupati", "Other"],
-  "Arunachal Pradesh": ["Itanagar", "Naharlagun", "Tawang", "Pasighat", "Other"],
-  Assam: ["Guwahati", "Dibrugarh", "Silchar", "Jorhat", "Other"],
-  Bihar: ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur", "Other"],
-  Chhattisgarh: ["Raipur", "Bhilai", "Bilaspur", "Korba", "Other"],
-  Goa: ["Panaji", "Margao", "Vasco da Gama", "Mapusa", "Other"],
-  Gujarat: ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Other"],
-  Haryana: ["Gurugram", "Faridabad", "Panipat", "Hisar", "Other"],
-  "Himachal Pradesh": ["Shimla", "Dharamshala", "Mandi", "Solan", "Other"],
-  Jharkhand: ["Ranchi", "Jamshedpur", "Dhanbad", "Bokaro", "Other"],
-  Karnataka: ["Bengaluru", "Mysuru", "Mangaluru", "Hubballi", "Other"],
-  Kerala: ["Kochi", "Thiruvananthapuram", "Kozhikode", "Thrissur", "Other"],
-  "Madhya Pradesh": ["Bhopal", "Indore", "Gwalior", "Jabalpur", "Other"],
-  Maharashtra: ["Mumbai", "Pune", "Nagpur", "Nashik", "Other"],
-  Manipur: ["Imphal", "Thoubal", "Bishnupur", "Churachandpur", "Other"],
-  Meghalaya: ["Shillong", "Tura", "Jowai", "Nongpoh", "Other"],
-  Mizoram: ["Aizawl", "Lunglei", "Champhai", "Kolasib", "Other"],
-  Nagaland: ["Kohima", "Dimapur", "Mokokchung", "Wokha", "Other"],
-  Odisha: ["Bhubaneswar", "Cuttack", "Rourkela", "Sambalpur", "Other"],
-  Punjab: ["Ludhiana", "Amritsar", "Jalandhar", "Patiala", "Other"],
-  Rajasthan: ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Other"],
-  Sikkim: ["Gangtok", "Namchi", "Gyalshing", "Mangan", "Other"],
-  "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Other"],
-  Telangana: ["Hyderabad", "Warangal", "Nizamabad", "Khammam", "Other"],
-  Tripura: ["Agartala", "Dharmanagar", "Udaipur", "Kailasahar", "Other"],
-  "Uttar Pradesh": ["Lucknow", "Kanpur", "Noida", "Varanasi", "Other"],
-  Uttarakhand: ["Dehradun", "Haridwar", "Haldwani", "Roorkee", "Other"],
-  "West Bengal": ["Kolkata", "Howrah", "Siliguri", "Durgapur", "Other"],
-  "Andaman and Nicobar Islands": ["Port Blair", "Diglipur", "Mayabunder", "Rangat", "Other"],
-  Chandigarh: ["Chandigarh", "Other"],
-  "Dadra and Nagar Haveli and Daman and Diu": ["Daman", "Silvassa", "Diu", "Other"],
-  Delhi: ["New Delhi", "North Delhi", "South Delhi", "Dwarka", "Other"],
-  "Jammu and Kashmir": ["Srinagar", "Jammu", "Anantnag", "Baramulla", "Other"],
-  Ladakh: ["Leh", "Kargil", "Nubra", "Other"],
-  Lakshadweep: ["Kavaratti", "Agatti", "Minicoy", "Other"],
-  Puducherry: ["Puducherry", "Karaikal", "Mahe", "Yanam", "Other"],
-  "Outside India": ["Other"]
-};
 
 const defaultPaymentApps = ["GPay", "PhonePe", "Paytm", "BHIM", "Amazon Pay", "Mobikwik", "Other"];
 

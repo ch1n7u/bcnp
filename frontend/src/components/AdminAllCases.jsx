@@ -14,6 +14,16 @@ const statusBadge = {
 
 const statuses = ["Submitted", "Under Review", "Investigation", "Resolved", "Closed"];
 
+const crimeTypesMap = {
+  "Phishing": "Phishing Scam",
+  "Online fraud": "Online Fraud",
+  "UPI scams": "UPI Scam",
+  "Social media harassment": "Social Media Harassment",
+  "Identity theft": "Identity Theft",
+  "Cryptocurrency scams": "Cryptocurrency Scam",
+  "Fake websites": "Fake Website Scam"
+};
+
 function SecureImage({ src, alt, className }) {
   const [blobUrl, setBlobUrl] = useState(null);
 
@@ -130,7 +140,7 @@ export default function AdminAllCases() {
                     #{report.report_id}
                   </div>
                   <div>
-                    <h3 className="font-bold text-slate-900">{report.crime_type}</h3>
+                    <h3 className="font-bold text-slate-900">{crimeTypesMap[report.crime_type] || report.crime_type || "Not Specified"}</h3>
                     <p className="text-sm text-slate-500">{report.victim_name || "Anonymous"} • {new Date(report.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
@@ -159,6 +169,10 @@ export default function AdminAllCases() {
                       <div>
                         <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Incident Information</h4>
                         <div className="mt-2 grid grid-cols-2 gap-4 rounded-xl bg-slate-50 p-4">
+                          <div className="col-span-2 rounded-lg bg-white p-3 shadow-sm border border-slate-100">
+                            <p className="text-[11px] font-bold uppercase tracking-wider text-ocean">Crime / Case Type</p>
+                            <p className="mt-1 font-semibold text-slate-900 text-base">{crimeTypesMap[report.crime_type] || report.crime_type || "Not Specified"}</p>
+                          </div>
                           <div>
                             <p className="text-xs text-slate-500">Date/Time</p>
                             <p className="font-medium">{new Date(report.incident_datetime).toLocaleString()}</p>
