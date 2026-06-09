@@ -12,23 +12,38 @@ export default function Map({ visitors }) {
     setMounted(true);
   }, []);
 
+  // 1. Initialize Map exactly once
   useEffect(() => {
     if (!mounted || !mapRef.current) return;
 
-    // Dynamically import leaflet to avoid window undefined on SSR
-    import("leaflet").then((L) => {
+    let L;
+    import("leaflet").then((leaflet) => {
+      L = leaflet;
       if (!mapInstanceRef.current) {
-        // Initialize map
-        mapInstanceRef.current = L.map(mapRef.current).setView([20.5937, 78.9629], 4);
-
+        const map = L.map(mapRef.current).setView([20.5937, 78.9629], 4);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(mapInstanceRef.current);
+        }).addTo(map);
+        mapInstanceRef.current = map;
       }
+    });
 
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [mounted]);
+
+  // 2. Update Markers when visitors change
+  useEffect(() => {
+    if (!mounted || !visitors || !mapInstanceRef.current) return;
+
+    import("leaflet").then((L) => {
       const map = mapInstanceRef.current;
 
-      // Clear existing layers if any (basic implementation, just clears all and re-adds)
+      // Clear existing circle markers
       map.eachLayer((layer) => {
         if (layer instanceof L.CircleMarker) {
           map.removeLayer(layer);
@@ -39,30 +54,24 @@ export default function Map({ visitors }) {
 
       validVisitors.forEach(visitor => {
         const marker = L.circleMarker([visitor.latitude, visitor.longitude], {
-          radius: 6,
+          radius: 8,
           color: '#0ea5e9',
           fillColor: '#38bdf8',
-          fillOpacity: 0.7
+          fillOpacity: 0.8,
+          weight: 2
         }).addTo(map);
 
         const popupContent = `
-          <div class="text-xs">
-            <p><strong>IP:</strong> ${visitor.ip_address}</p>
-            <p><strong>Location:</strong> ${visitor.city}, ${visitor.region}, ${visitor.country}</p>
-            <p><strong>Device:</strong> ${visitor.device_type} / ${visitor.browser}</p>
+          <div class="text-xs p-1">
+            <p class="mb-1"><strong>IP:</strong> <span class="font-mono">${visitor.ip_address}</span></p>
+            <p class="mb-1"><strong>Location:</strong> ${visitor.city || 'Unknown'}, ${visitor.country || 'Unknown'}</p>
+            <p class="mb-1"><strong>Device:</strong> ${visitor.device_type || 'Unknown'} / ${visitor.browser || 'Unknown'}</p>
             <p><strong>Last Seen:</strong> ${new Date(visitor.last_seen).toLocaleString()}</p>
           </div>
         `;
         marker.bindPopup(popupContent);
       });
     });
-
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
-    };
   }, [mounted, visitors]);
 
   if (!mounted) {

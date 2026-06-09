@@ -19,9 +19,9 @@ export default function AuditLogTable({ logs }) {
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-      <div className="overflow-x-auto">
+      <div className="overflow-auto max-h-[400px]">
         <table className="w-full text-left text-sm text-slate-600">
-          <thead className="bg-slate-50 text-xs font-semibold uppercase text-slate-700">
+          <thead className="bg-slate-50 text-xs font-semibold uppercase text-slate-700 sticky top-0 z-10 shadow-sm">
             <tr>
               <th className="px-6 py-4">Timestamp</th>
               <th className="px-6 py-4">Action</th>

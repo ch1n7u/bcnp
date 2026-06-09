@@ -14,9 +14,9 @@ export default function VisitorTable({ visitors }) {
       <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
         <h3 className="font-bold text-slate-800">Recent Visitors (IP Details)</h3>
       </div>
-      <div className="overflow-x-auto">
+      <div className="overflow-auto max-h-[400px]">
         <table className="w-full text-left text-sm text-slate-600">
-          <thead className="bg-slate-50 text-xs font-semibold uppercase text-slate-700">
+          <thead className="bg-slate-50 text-xs font-semibold uppercase text-slate-700 sticky top-0 z-10 shadow-sm">
             <tr>
               <th className="px-6 py-4">IP Address</th>
               <th className="px-6 py-4">Location</th>
