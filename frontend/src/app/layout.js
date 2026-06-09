@@ -4,11 +4,8 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import PageTracker from "../components/PageTracker";
 import { AuthProvider } from "../context/AuthContext";
-<<<<<<< HEAD
 import { Suspense } from "react";
-=======
 import DisclaimerOverlay from "../components/DisclaimerOverlay";
->>>>>>> faf324f814949127f30f3c5e1394f7f8e6ca3bd5
 
 export const metadata = {
   metadataBase: new URL("https://bharatcybernyayportal.online"),
