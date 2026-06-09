@@ -2,6 +2,7 @@ const { supabaseAdmin } = require("../config/db");
 const { getAnonymousReporterId } = require("../utils/anonymousReporter");
 const { PAYMENT_APPS, INDIAN_STATES_AND_UTS } = require("../config/reportMetadata");
 const { logCaseEvent } = require("../services/caseTimelineService");
+const AuditLogger = require("../services/auditLogger");
 
 const ANONYMOUS_ALLOWED_CRIME_TYPES = new Set([
   "Fake websites",
@@ -57,6 +58,8 @@ async function createReport(req, res, next) {
       },
       req
     });
+
+    await AuditLogger.log({ actionType: 'REPORT_SUBMITTED', targetType: 'REPORT', targetId: report.report_id, req, metadata: { crime_type: report.crime_type } });
 
     return res.status(201).json(report);
   } catch (error) {

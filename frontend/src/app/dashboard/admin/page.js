@@ -49,6 +49,13 @@ export default function AdminDashboardPage() {
             accent="bg-purple-100 text-purple-700"
             cta="Users"
           />
+          <ActionCard
+            href="/dashboard/admin/analytics"
+            title="Analytics & Security"
+            description="Monitor visitor activity, page visits, session trends, and view detailed security audit logs and map locations."
+            accent="bg-indigo-100 text-indigo-700"
+            cta="Analytics"
+          />
         </div>
 
         <AdminAllCases />

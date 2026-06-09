@@ -1,5 +1,6 @@
 const { supabaseAdmin } = require("../config/db");
 const { logCaseEvent, getCaseTimelineEntries } = require("../services/caseTimelineService");
+const AuditLogger = require("../services/auditLogger");
 
 function generateProxyUrl(req, evidenceId) {
   return `${req.protocol}://${req.get("host")}/api/evidence/file/${evidenceId}`;
@@ -74,6 +75,8 @@ async function updateStatus(req, res, next) {
       req
     });
 
+    await AuditLogger.log({ actionType: 'CASE_STATUS_UPDATED', targetType: 'REPORT', targetId: reportId, req, metadata: { previous_status: report.status, new_status: status } });
+
     return res.json(data);
   } catch (error) {
     return next(error);
@@ -134,6 +137,8 @@ async function assignInvestigator(req, res, next) {
       },
       req
     });
+
+    await AuditLogger.log({ actionType: 'CASE_ASSIGNED', targetType: 'REPORT', targetId: reportId, req, metadata: { new_investigator_id: investigator.id } });
 
     return res.json(data);
   } catch (error) {
@@ -301,6 +306,8 @@ async function deleteCase(req, res, next) {
       .eq("report_id", reportId);
 
     if (reportDeleteError) return next(new Error(reportDeleteError.message));
+
+    await AuditLogger.log({ actionType: 'CASE_DELETED', targetType: 'REPORT', targetId: reportId, req });
 
     return res.json({ message: "Case deleted successfully", reportId });
   } catch (error) {

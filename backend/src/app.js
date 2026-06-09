@@ -9,6 +9,7 @@ const routes = require("./routes");
 const env = require("./config/env");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
 const requestCorrelation = require("./middleware/requestCorrelation");
+const visitorTracker = require("./middleware/visitorTracker");
 
 const app = express();
 
@@ -93,6 +94,16 @@ app.use(
 // 3. Cookie parser (needed for CSRF cookie parsing)
 app.use(cookieParser());
 
+app.use(express.json({ limit: "5mb" }));
+app.use(hpp());
+
+// 5. Visitor Tracking Middleware
+app.use(visitorTracker);
+
+// Tracking endpoint should be exempt from CSRF (public ingest)
+const trackingRoutes = require("./routes/trackingRoutes");
+app.use("/api/track", trackingRoutes);
+
 // 4. CSRF Protection (registered after CORS and cookies)
 const csrfProtection = csrf({
   cookie: {
@@ -103,8 +114,6 @@ const csrfProtection = csrf({
   }
 });
 app.use(csrfProtection);
-app.use(express.json({ limit: "5mb" }));
-app.use(hpp());
 app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,

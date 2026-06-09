@@ -8,6 +8,7 @@ const { findByEmail, findById, createUser } = require("../models/userModel");
 const { otpStore, rateLimitStore } = require("../utils/store");
 const { sendOtpEmail } = require("../utils/mailer");
 const logger = require("../utils/logger");
+const AuditLogger = require("../services/auditLogger");
 
 function maskEmail(email) {
   if (!email || typeof email !== "string") return "***";
@@ -151,6 +152,7 @@ async function registerFinal(req, res, next) {
     otpStore.delete(email);
 
     logger.info(`SECURITY_AUDIT: User registration completed successfully for email: ${maskEmail(email)}`, {}, correlationId);
+    await AuditLogger.log({ actionType: 'USER_REGISTERED', targetType: 'USER', targetId: user.id, req, metadata: { email } });
 
     return res.status(201).json({
       status: "success",
@@ -297,6 +299,7 @@ async function resetPassword(req, res, next) {
     otpStore.delete(resetKey);
 
     logger.info(`SECURITY_AUDIT: Password reset completed successfully for email: ${maskEmail(email)}`, {}, correlationId);
+    await AuditLogger.log({ actionType: 'PASSWORD_RESET', targetType: 'USER', targetId: user.id, req, metadata: { email } });
 
     return res.status(200).json({
       status: "success",
@@ -366,6 +369,8 @@ async function login(req, res, next) {
     });
 
     logger.info(`SECURITY_AUDIT: User login successful for email: ${maskEmail(email)}`, {}, correlationId);
+    req.user = user; // Set for AuditLogger
+    await AuditLogger.log({ actionType: 'USER_LOGIN', targetType: 'USER', targetId: user.id, req, metadata: { email } });
 
     return res.json({
       status: "success",
@@ -453,12 +458,14 @@ async function me(req, res, next) {
 }
 
 async function logout(req, res, next) {
+  const userId = req.user?.id;
   res.clearCookie("ccrp_token", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax"
   });
   logger.info(`SECURITY_AUDIT: User logged out`, {}, req.correlationId);
+  await AuditLogger.log({ actionType: 'USER_LOGOUT', targetType: 'USER', targetId: userId, req });
   return res.json({ status: "success", message: "Logged out successfully" });
 }
 
@@ -519,6 +526,9 @@ async function googleLogin(req, res, next) {
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
+
+    req.user = user; // Set for AuditLogger
+    await AuditLogger.log({ actionType: 'GOOGLE_OAUTH_LOGIN', targetType: 'USER', targetId: user.id, req, metadata: { email, mode } });
 
     return res.json({
       user: {

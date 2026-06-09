@@ -2,7 +2,9 @@ import "./globals.css";
 import Script from "next/script";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import PageTracker from "../components/PageTracker";
 import { AuthProvider } from "../context/AuthContext";
+import { Suspense } from "react";
 
 export const metadata = {
   metadataBase: new URL("https://bharatcybernyayportal.online"),
@@ -60,6 +62,9 @@ export default function RootLayout({ children }) {
             <Footer />
           </div>
         </AuthProvider>
+        <Suspense fallback={null}>
+          <PageTracker />
+        </Suspense>
         <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
       </body>
     </html>

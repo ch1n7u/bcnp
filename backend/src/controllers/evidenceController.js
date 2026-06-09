@@ -4,6 +4,7 @@ const env = require("../config/env");
 const { sha256Buffer } = require("../utils/hash");
 const { getAnonymousReporterId } = require("../utils/anonymousReporter");
 const { logCaseEvent } = require("../services/caseTimelineService");
+const AuditLogger = require("../services/auditLogger");
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = [
@@ -146,6 +147,8 @@ async function uploadEvidence(req, res, next) {
       req
     });
 
+    await AuditLogger.log({ actionType: 'EVIDENCE_UPLOADED', targetType: 'EVIDENCE', targetId: evidence.evidence_id, req, metadata: { report_id: reportId, original_name: evidence.original_name } });
+
     // We store the generic relative proxy URL inside the upload response too
     return res.status(201).json({
       ...evidence,
@@ -242,6 +245,9 @@ async function downloadEvidence(req, res, next) {
 
     res.setHeader("Content-Type", evidence.mime_type);
     res.setHeader("Content-Disposition", `inline; filename="${evidence.original_name}"`);
+
+    await AuditLogger.log({ actionType: 'EVIDENCE_DOWNLOADED', targetType: 'EVIDENCE', targetId: evidenceId, req, metadata: { report_id: evidence.report_id } });
+
     return res.end(buffer);
   } catch (error) {
     return next(error);

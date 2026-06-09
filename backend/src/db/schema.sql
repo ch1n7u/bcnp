@@ -112,3 +112,72 @@ LANGUAGE SQL SECURITY DEFINER AS $$
   GROUP BY location
   ORDER BY reports DESC;
 $$;
+
+-- Analytics & Audit Logging Schema
+
+CREATE TABLE IF NOT EXISTS visitors (
+  id BIGSERIAL PRIMARY KEY,
+  ip_address VARCHAR(120) UNIQUE NOT NULL,
+  country VARCHAR(120),
+  region VARCHAR(120),
+  city VARCHAR(120),
+  timezone VARCHAR(120),
+  latitude NUMERIC(10,8),
+  longitude NUMERIC(11,8),
+  isp VARCHAR(255),
+  asn VARCHAR(120),
+  user_agent TEXT,
+  browser VARCHAR(120),
+  os VARCHAR(120),
+  device_type VARCHAR(120),
+  language VARCHAR(120),
+  first_seen TIMESTAMP NOT NULL DEFAULT NOW(),
+  last_seen TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS visitor_sessions (
+  id BIGSERIAL PRIMARY KEY,
+  visitor_id BIGINT NOT NULL REFERENCES visitors(id) ON DELETE CASCADE,
+  user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  session_id VARCHAR(255) UNIQUE NOT NULL,
+  started_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  ended_at TIMESTAMP,
+  duration_seconds INT DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS page_visits (
+  id BIGSERIAL PRIMARY KEY,
+  visitor_id BIGINT NOT NULL REFERENCES visitors(id) ON DELETE CASCADE,
+  session_id VARCHAR(255) NOT NULL,
+  user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  page_name VARCHAR(255),
+  page_url TEXT NOT NULL,
+  route VARCHAR(255),
+  referrer TEXT,
+  visited_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  duration_seconds INT DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  visitor_id BIGINT REFERENCES visitors(id) ON DELETE SET NULL,
+  session_id VARCHAR(255),
+  ip_address VARCHAR(120),
+  action_type VARCHAR(120) NOT NULL,
+  target_type VARCHAR(120),
+  target_id VARCHAR(255),
+  metadata JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_visitors_ip ON visitors(ip_address);
+CREATE INDEX IF NOT EXISTS idx_visitor_sessions_visitor_id ON visitor_sessions(visitor_id);
+CREATE INDEX IF NOT EXISTS idx_visitor_sessions_session_id ON visitor_sessions(session_id);
+CREATE INDEX IF NOT EXISTS idx_page_visits_visitor_id ON page_visits(visitor_id);
+CREATE INDEX IF NOT EXISTS idx_page_visits_session_id ON page_visits(session_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action_type ON audit_logs(action_type);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
