@@ -335,6 +335,7 @@ async function login(req, res, next) {
 
     if (lockoutData.lockedUntil > now) {
       logger.warn(`SECURITY_AUDIT: Login blocked due to account lockout for email: ${maskEmail(email)}`, {}, correlationId);
+      AuditLogger.log({ actionType: 'LOGIN_FAILED', targetType: 'USER', targetId: email, req, metadata: { reason: 'Account locked out' } });
       return res.status(401).json({ status: "error", message: "Invalid credentials.", correlationId });
     }
 
@@ -350,6 +351,7 @@ async function login(req, res, next) {
       rateLimitStore.set(lockoutKey, lockoutData, 15 * 60);
 
       logger.warn(`SECURITY_AUDIT: Login failed (user not found) for email: ${maskEmail(email)}`, {}, correlationId);
+      AuditLogger.log({ actionType: 'LOGIN_FAILED', targetType: 'USER', targetId: email, req, metadata: { reason: 'User not found' } });
       return res.status(401).json({ status: "error", message: "Invalid credentials.", correlationId });
     }
 
@@ -364,6 +366,7 @@ async function login(req, res, next) {
       rateLimitStore.set(lockoutKey, lockoutData, 15 * 60);
 
       logger.warn(`SECURITY_AUDIT: Login failed (incorrect password) for email: ${maskEmail(email)}`, {}, correlationId);
+      AuditLogger.log({ actionType: 'LOGIN_FAILED', targetType: 'USER', targetId: user.id, req, metadata: { reason: 'Incorrect password' } });
       return res.status(401).json({ status: "error", message: "Invalid credentials.", correlationId });
     }
 
