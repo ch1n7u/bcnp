@@ -151,14 +151,6 @@ async function getDashboardAnalytics(req, res, next) {
     const securityThreats = await SecurityMonitor.getThreatIndicators();
 
     return res.json({
-<<<<<<< HEAD
-      crimeDistribution: crime.data || [],
-      monthlyTrend: monthly.data || [],
-      statusBreakdown: statusBreak.data || [],
-      financialFraudStats: (loss.data && loss.data[0]) || { total_loss: 0 },
-      reportsPerState: states.data || [],
-      securityThreats
-=======
       filterOptions,
       crimeDistribution,
       monthlyTrend,
@@ -171,8 +163,8 @@ async function getDashboardAnalytics(req, res, next) {
         resolvedReports: resolvedCount,
         activeInvestigations: activeCount,
         averageResolutionHours: avgResolutionHours
-      }
->>>>>>> faf324f814949127f30f3c5e1394f7f8e6ca3bd5
+      },
+      securityThreats
     });
   } catch (error) {
     return next(error);
