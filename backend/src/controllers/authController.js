@@ -552,15 +552,13 @@ async function googleLogin(req, res, next) {
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
-<<<<<<< HEAD
     req.user = user; // Set for AuditLogger
     await AuditLogger.log({ actionType: 'GOOGLE_OAUTH_LOGIN', targetType: 'USER', targetId: user.id, req, metadata: { email, mode } });
-=======
+
     // Send login alert asynchronously
     if (user.role === "citizen") {
       sendLoginAlertEmail(user.email, user.name);
     }
->>>>>>> faf324f814949127f30f3c5e1394f7f8e6ca3bd5
 
     return res.json({
       user: {
