@@ -6,7 +6,7 @@ const { signAccessToken } = require("../utils/jwt");
 const { supabaseAdmin } = require("../config/db");
 const { findByEmail, findById, createUser } = require("../models/userModel");
 const { otpStore, rateLimitStore } = require("../utils/store");
-const { sendOtpEmail } = require("../utils/mailer");
+const { sendOtpEmail, sendWelcomeEmail, sendLoginAlertEmail } = require("../utils/mailer");
 const logger = require("../utils/logger");
 const AuditLogger = require("../services/auditLogger");
 
@@ -151,6 +151,9 @@ async function registerFinal(req, res, next) {
 
     otpStore.delete(email);
 
+    // Send welcome email asynchronously (don't await to not block the response)
+    sendWelcomeEmail(user.email, user.name);
+
     logger.info(`SECURITY_AUDIT: User registration completed successfully for email: ${maskEmail(email)}`, {}, correlationId);
     await AuditLogger.log({ actionType: 'USER_REGISTERED', targetType: 'USER', targetId: user.id, req, metadata: { email } });
 
@@ -201,6 +204,15 @@ async function forgotPasswordSendOtp(req, res, next) {
         status: "success",
         message: "Password reset OTP sent to your email.",
         waitLimit: 30
+      });
+    }
+
+    if (user.auth_provider === "google") {
+      logger.warn(`SECURITY_AUDIT: Password reset requested for Google auth user: ${maskEmail(email)}`, {}, correlationId);
+      return res.status(400).json({
+        status: "error",
+        message: "This account uses Google Sign-In. Password reset is not available.",
+        correlationId
       });
     }
 
@@ -372,6 +384,11 @@ async function login(req, res, next) {
     req.user = user; // Set for AuditLogger
     await AuditLogger.log({ actionType: 'USER_LOGIN', targetType: 'USER', targetId: user.id, req, metadata: { email } });
 
+    // Send login alert asynchronously
+    if (user.role === "citizen") {
+      sendLoginAlertEmail(user.email, user.name);
+    }
+
     return res.json({
       status: "success",
       user: {
@@ -390,6 +407,9 @@ async function login(req, res, next) {
 async function me(req, res, next) {
   try {
     const user = await findById(req.user.id);
+    if (user) {
+      user.provider = req.user.provider || "local";
+    }
     const correlationId = req.correlationId;
     if (!user) {
       logger.warn(`SECURITY_AUDIT: Current user fetch failed (user not found) for id: ${req.user.id}`, {}, correlationId);
@@ -514,10 +534,15 @@ async function googleLogin(req, res, next) {
         name: name || email.split("@")[0],
         email: email,
         passwordHash: passwordHash,
-        role: "citizen"
+        role: "citizen",
+        authProvider: "google"
       });
+      
+      // Send welcome email to new Google registrants
+      sendWelcomeEmail(user.email, user.name);
     }
 
+    user.provider = "google";
     const token = signAccessToken(user);
 
     res.cookie("ccrp_token", token, {
@@ -527,15 +552,23 @@ async function googleLogin(req, res, next) {
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
+<<<<<<< HEAD
     req.user = user; // Set for AuditLogger
     await AuditLogger.log({ actionType: 'GOOGLE_OAUTH_LOGIN', targetType: 'USER', targetId: user.id, req, metadata: { email, mode } });
+=======
+    // Send login alert asynchronously
+    if (user.role === "citizen") {
+      sendLoginAlertEmail(user.email, user.name);
+    }
+>>>>>>> faf324f814949127f30f3c5e1394f7f8e6ca3bd5
 
     return res.json({
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        provider: "google"
       },
       token
     });

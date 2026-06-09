@@ -4,7 +4,7 @@ async function findByEmail(email) {
   const normalizedEmail = email.trim().toLowerCase();
   const { data, error } = await supabaseAdmin
     .from("users")
-    .select("id, name, email, role, password_hash, created_at")
+    .select("id, name, email, role, password_hash, auth_provider, created_at")
     .eq("email", normalizedEmail)
     .maybeSingle();
 
@@ -15,7 +15,7 @@ async function findByEmail(email) {
 async function findById(id) {
   const { data, error } = await supabaseAdmin
     .from("users")
-    .select("id, name, email, role, created_at")
+    .select("id, name, email, role, auth_provider, created_at")
     .eq("id", id)
     .maybeSingle();
 
@@ -23,7 +23,7 @@ async function findById(id) {
   return data;
 }
 
-async function createUser({ name, email, passwordHash, role = "citizen" }) {
+async function createUser({ name, email, passwordHash, role = "citizen", authProvider = "local" }) {
   const normalizedEmail = email.trim().toLowerCase();
 
   const { data, error } = await supabaseAdmin
@@ -32,9 +32,10 @@ async function createUser({ name, email, passwordHash, role = "citizen" }) {
       name: name.trim(),
       email: normalizedEmail,
       password_hash: passwordHash,
-      role
+      role,
+      auth_provider: authProvider
     })
-    .select("id, name, email, role, created_at")
+    .select("id, name, email, role, auth_provider, created_at")
     .single();
 
   if (error) throw new Error(error.message);
