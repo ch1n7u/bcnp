@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Allow: /resources
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /login
+Disallow: /register
+Disallow: /report
+Disallow: /track
+Disallow: /unauthorized
+
+# Sitemap
+Sitemap: https://bharatcybernyayportal.online/sitemap.xml
