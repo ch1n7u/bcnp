@@ -123,7 +123,7 @@ export default function AdminAllCases() {
         </div>
       </div>
       
-      <div className="space-y-4">
+      <div className="space-y-4 max-h-[65vh] overflow-y-auto py-2 pr-2 custom-scrollbar">
         {reports.map((report) => {
           const isExpanded = expandedId === report.report_id;
           const assignedId = report.assigned_investigator_id || "";

@@ -137,3 +137,22 @@ nextjs-portal,
   display: none !important;
 }
 
+/* Custom premium scrollbar for cases lists */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(10, 97, 115, 0.05);
+  border-radius: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(10, 97, 115, 0.25);
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(10, 97, 115, 0.45);
+}
+
+
