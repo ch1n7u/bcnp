@@ -38,8 +38,11 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             sudo mkdir -p /var/www/bcnp
-            sudo chown $USER:$USER /var/www/bcnp
-            sudo chmod 755 /var/www/bcnp
+            # The -R flag recursively applies ownership to all contents inside
+            # Using $(whoami) is safer than $USER in non-interactive SSH sessions
+            sudo chown -R $(whoami):$(whoami) /var/www/bcnp
+            sudo chmod -R 755 /var/www/bcnp
+
 
       # 3. Copy code AND the newly generated .next build folder to EC2
       - name: Copy latest code to EC2
