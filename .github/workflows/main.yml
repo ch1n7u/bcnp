@@ -8,7 +8,6 @@ on:
 permissions:
   contents: read
 
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -16,6 +15,20 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      # 1. Setup Node on GitHub's runner
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22' # Matches the Node version from your server logs
+
+      # 2. Build the Next.js app inside GitHub Actions
+      - name: Build Next.js Frontend
+        run: |
+          # If your Next.js app is in the root, remove "cd frontend"
+          cd frontend 
+          npm install
+          npm run build
 
       - name: Prepare target directory on EC2
         uses: appleboy/ssh-action@v1.0.3
@@ -28,6 +41,7 @@ jobs:
             sudo chown $USER:$USER /var/www/bcnp
             sudo chmod 755 /var/www/bcnp
 
+      # 3. Copy code AND the newly generated .next build folder to EC2
       - name: Copy latest code to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -54,11 +68,6 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Navigate to the project directory
             cd /var/www/bcnp/
-            
-            # Make the deployment script executable (just in case)
             chmod +x deploy.sh
-            
-            # Execute the deployment script
             ./deploy.sh
