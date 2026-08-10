@@ -108,7 +108,7 @@ sudo npm install
 echo "Building frontend..."
 # Next.js loads .env.local automatically during build.
 sudo rm -rf .next/cache
-sudo npm run build
+# sudo npm run build
 
 echo "Restarting frontend process..."
 # If PM2 is already managing a process named "frontend", it restarts it.
