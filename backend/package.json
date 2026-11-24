@@ -30,7 +30,7 @@
     "nodemailer": "^10.0.9",
     "pg": "^8.13.1",
     "svg-captcha": "^1.4.0",
-    "zod": "^3.23.8"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"
